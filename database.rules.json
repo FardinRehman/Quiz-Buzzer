@@ -1,0 +1,71 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "users": {
+      "$uid": {
+        // A user can read their own profile, or an admin can read any user profile
+        ".read": "auth != null && (auth.uid === $uid || auth.token.role === 'admin')",
+        // Only admins can write or modify user records, preventing role elevation
+        ".write": "auth != null && auth.token.role === 'admin'",
+        ".validate": "newData.hasChildren(['displayName', 'email', 'role', 'accountStatus'])",
+        "role": {
+          ".validate": "newData.val() === 'admin' || newData.val() === 'student'"
+        },
+        "accountStatus": {
+          ".validate": "newData.val() === 'active' || newData.val() === 'disabled'"
+        }
+      }
+    },
+
+    "sessions": {
+      // Authenticated users can list or read sessions
+      ".read": "auth != null",
+
+      "$sessionId": {
+        // Only admins can create, update, or delete sessions
+        ".write": "auth != null && auth.token.role === 'admin'",
+
+        "rounds": {
+          "$roundId": {
+            // Authoritative round fields (status, winnerUid, winnerStudentId, winnerAcceptedAt)
+            // MUST NEVER be written directly by student clients. Only admin or trusted Cloud Function.
+            "winnerUid": {
+              ".write": "auth != null && auth.token.role === 'admin'"
+            },
+            "winnerStudentId": {
+              ".write": "auth != null && auth.token.role === 'admin'"
+            },
+            "winnerNameSnapshot": {
+              ".write": "auth != null && auth.token.role === 'admin'"
+            },
+            "winnerAcceptedAt": {
+              ".write": "auth != null && auth.token.role === 'admin'"
+            },
+            "status": {
+              ".write": "auth != null && auth.token.role === 'admin'"
+            },
+
+            "attempts": {
+              "$attemptUid": {
+                // Students can only write their own attempt record
+                ".read": "auth != null && (auth.uid === $attemptUid || auth.token.role === 'admin')",
+                // Writes to attempts are strictly mediated through server/Cloud Function
+                ".write": "auth != null && auth.token.role === 'admin'"
+              }
+            }
+          }
+        },
+
+        "participants": {
+          "$participantUid": {
+            // Students can record their own presence/join state
+            ".read": "auth != null",
+            ".write": "auth != null && (auth.uid === $participantUid || auth.token.role === 'admin')"
+          }
+        }
+      }
+    }
+  }
+}

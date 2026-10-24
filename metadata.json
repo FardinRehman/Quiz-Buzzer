@@ -1,0 +1,6 @@
+{
+  "name": "QuickBuzz - Real-Time Fastest Finger First Platform",
+  "description": "Real-time Fastest Finger First buzzer platform for classroom competitions, college tech fests, and live quiz rounds with atomic race-safe winner selection.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

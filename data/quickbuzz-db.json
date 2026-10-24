@@ -1,0 +1,1929 @@
+{
+  "users": {
+    "admin_root_1": {
+      "uid": "admin_root_1",
+      "email": "fardinrit@gmail.com",
+      "displayName": "Quizmaster Admin",
+      "role": "admin",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:34.003Z",
+      "salt": "568e7d54003886d145dc7b87564866e8",
+      "passwordHash": "bab29e34c97a803fb835edea1e82863ceadd1fc5f3f2770661dbe3a8f31a13d4bf95adaf75e117818fbf94c77bceb349eff1aed8582f34b09ea83fe94f780048"
+    },
+    "stu_1": {
+      "uid": "stu_1",
+      "email": "alex.turner@campus.edu",
+      "displayName": "Alex Turner",
+      "studentId": "1MS21CS042",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:34.068Z",
+      "salt": "a68d6167ed3a970a9e09c37b3d82c713",
+      "passwordHash": "19887cb741945db74ca796c1b269a1c83d0e74b571efd259b555b7e382a469af0e0ff018aa28da9be67e0353e2797840b2f49fea2fe6a5a5cce17645ee1e29e2"
+    },
+    "stu_2": {
+      "uid": "stu_2",
+      "email": "priya.sharma@campus.edu",
+      "displayName": "Priya Sharma",
+      "studentId": "1MS21CS088",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:34.126Z",
+      "salt": "a68d6167ed3a970a9e09c37b3d82c713",
+      "passwordHash": "19887cb741945db74ca796c1b269a1c83d0e74b571efd259b555b7e382a469af0e0ff018aa28da9be67e0353e2797840b2f49fea2fe6a5a5cce17645ee1e29e2"
+    },
+    "stu_3": {
+      "uid": "stu_3",
+      "email": "david.chen@campus.edu",
+      "displayName": "David Chen",
+      "studentId": "1MS21CS019",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:34.172Z",
+      "salt": "a68d6167ed3a970a9e09c37b3d82c713",
+      "passwordHash": "19887cb741945db74ca796c1b269a1c83d0e74b571efd259b555b7e382a469af0e0ff018aa28da9be67e0353e2797840b2f49fea2fe6a5a5cce17645ee1e29e2"
+    },
+    "stu_4": {
+      "uid": "stu_4",
+      "email": "fatima.zahra@campus.edu",
+      "displayName": "Fatima Zahra",
+      "studentId": "1MS21CS034",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:34.217Z",
+      "salt": "a68d6167ed3a970a9e09c37b3d82c713",
+      "passwordHash": "19887cb741945db74ca796c1b269a1c83d0e74b571efd259b555b7e382a469af0e0ff018aa28da9be67e0353e2797840b2f49fea2fe6a5a5cce17645ee1e29e2"
+    },
+    "stu_5": {
+      "uid": "stu_5",
+      "email": "marcus.vance@campus.edu",
+      "displayName": "Marcus Vance",
+      "studentId": "1MS21CS105",
+      "role": "student",
+      "accountStatus": "disabled",
+      "createdAt": "2026-10-24T17:19:34.262Z",
+      "salt": "a68d6167ed3a970a9e09c37b3d82c713",
+      "passwordHash": "19887cb741945db74ca796c1b269a1c83d0e74b571efd259b555b7e382a469af0e0ff018aa28da9be67e0353e2797840b2f49fea2fe6a5a5cce17645ee1e29e2"
+    },
+    "stu_1792862376376_5ad02b": {
+      "uid": "stu_1792862376376_5ad02b",
+      "email": "sim_stu_4@test.com",
+      "displayName": "Contestant 4",
+      "studentId": "SIM_STU_4",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:36.377Z",
+      "salt": "1b3e740627963810894a42da75f62427",
+      "passwordHash": "d0e8573a61cbcf901068904c5f156c11bf1b13112d9410fc5140c13dd9450e6eb10e67a071e4c874fd7ab99939602eb9f9d49086eeb5eff5980871f7de84402b"
+    },
+    "stu_1792862376483_dc75f6": {
+      "uid": "stu_1792862376483_dc75f6",
+      "email": "sim_stu_5@test.com",
+      "displayName": "Contestant 5",
+      "studentId": "SIM_STU_5",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:36.483Z",
+      "salt": "29218b9dfacb460048be128e81e8de64",
+      "passwordHash": "22b550b4f8dd45bae19a188d91c6d0736aec8a14f2dcf2978f77feea7409dcbb753c03b0049478ca52d81fd9cb84510aac9ceb52bba1f30110840fe3fd1b3e7f"
+    },
+    "stu_1792862376583_c1d9b6": {
+      "uid": "stu_1792862376583_c1d9b6",
+      "email": "sim_stu_6@test.com",
+      "displayName": "Contestant 6",
+      "studentId": "SIM_STU_6",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:36.584Z",
+      "salt": "40d4f1040a4f59ea3e57ce01bf422394",
+      "passwordHash": "9a47d04955636c910c375fdf902aab92e3a1ce119d532fd4c295e3877e25a605332ee95f12e01fa98ddeff5f2d0438a5b99a8516657b561aadd125a804976c5a"
+    },
+    "stu_1792862376688_b97ebb": {
+      "uid": "stu_1792862376688_b97ebb",
+      "email": "sim_stu_7@test.com",
+      "displayName": "Contestant 7",
+      "studentId": "SIM_STU_7",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:36.688Z",
+      "salt": "331af85db83597cb9bbe79cd64ac5a73",
+      "passwordHash": "cb1fddaba649db907a6b3d423740103b0aef6e662dc58dbf7e6c861fd225caf84d6de374127b2c5a6d1346196ed92aef02bf90024b778b459443390e3b3be6e4"
+    },
+    "stu_1792862376788_3f287a": {
+      "uid": "stu_1792862376788_3f287a",
+      "email": "sim_stu_8@test.com",
+      "displayName": "Contestant 8",
+      "studentId": "SIM_STU_8",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:36.788Z",
+      "salt": "e6c2f11a7d87d3380b2edac405c4bddf",
+      "passwordHash": "076da0f04032e30678d6aa6b3228e3872ad32176fbb4b1851968c13bfdd447f7c4342c0d70874a56a2b21fe6678a7e990f14a6f07e6b0809a1c4caa834c8e8f3"
+    },
+    "stu_1792862376886_e55008": {
+      "uid": "stu_1792862376886_e55008",
+      "email": "sim_stu_9@test.com",
+      "displayName": "Contestant 9",
+      "studentId": "SIM_STU_9",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:36.886Z",
+      "salt": "cd8fea08cc346cf2160a429a439f7fa9",
+      "passwordHash": "70a0a87de7575ce6af3321a28e55a48dbba23c9239920e6fca384d09192937808067d792e3203e4f942a22b42feaa6c7ff9b6157259bf6ae6c5de0e6a4e67f6d"
+    },
+    "stu_1792862376982_d7915c": {
+      "uid": "stu_1792862376982_d7915c",
+      "email": "sim_stu_10@test.com",
+      "displayName": "Contestant 10",
+      "studentId": "SIM_STU_10",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:36.982Z",
+      "salt": "703b5000c6dfc6d1f4f2f0eaaed7312b",
+      "passwordHash": "cdb1b07bd20607a429732ba85cf562a42668acaa7e6df59f2c6d90347d6e4fde60ddac263cde40316672192e9fda0c738e2853e62cca05a8c3b66406ae786b11"
+    },
+    "stu_1792862377083_d616d7": {
+      "uid": "stu_1792862377083_d616d7",
+      "email": "sim_stu_11@test.com",
+      "displayName": "Contestant 11",
+      "studentId": "SIM_STU_11",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:37.083Z",
+      "salt": "23a1fd5db3ace7be9f2bb5be35d856e3",
+      "passwordHash": "2d45f832f9e252f5ac1169ef994e9f9c72bee54d11559dc79fe891375bca9407221f41b840998adb681d715c1548e9c4e44c59638f98286fe1bf71fe5ea7fe2f"
+    },
+    "stu_1792862377188_57d0e3": {
+      "uid": "stu_1792862377188_57d0e3",
+      "email": "sim_stu_12@test.com",
+      "displayName": "Contestant 12",
+      "studentId": "SIM_STU_12",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:37.188Z",
+      "salt": "71d01b3ee99b211a5e57ac9e43a5fb7b",
+      "passwordHash": "47b735ad96bc55840244287f2c64464b0c6cba42406167faf98655544ca9951d9cdf0bf2e473d8f72d7fff95530902de88872fd9819020b19dcedfe93946b25d"
+    },
+    "stu_1792862377295_d8ba36": {
+      "uid": "stu_1792862377295_d8ba36",
+      "email": "sim_stu_13@test.com",
+      "displayName": "Contestant 13",
+      "studentId": "SIM_STU_13",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:37.295Z",
+      "salt": "d27465d7a60b15b010fa0d2c5b5b6348",
+      "passwordHash": "cf65514a674d5292394d95e645fd113b402237372b0b27c40141cc4de6c0e2e1b3296084e4d0b4fe6117b5fa54830fbdbe1bb4cb0ce84ae16a89277c1f53303b"
+    },
+    "stu_1792862377395_50dd29": {
+      "uid": "stu_1792862377395_50dd29",
+      "email": "sim_stu_14@test.com",
+      "displayName": "Contestant 14",
+      "studentId": "SIM_STU_14",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:37.395Z",
+      "salt": "5ee7cbcb9d68a75dc4ec4672ebebc5ef",
+      "passwordHash": "5c5cda32a67d2bcb4e3320a2b00e2efb18ca67d41829feb4ffedeadd943fdaf6733aa4ea952f506e13a03c026dafd03292275422dc0ee1befb48f60e34a2e8da"
+    },
+    "stu_1792862377494_35249f": {
+      "uid": "stu_1792862377494_35249f",
+      "email": "sim_stu_15@test.com",
+      "displayName": "Contestant 15",
+      "studentId": "SIM_STU_15",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:37.494Z",
+      "salt": "23af8b97a1280331f13e8c78e05a29c5",
+      "passwordHash": "a85f35b90b6d15a331bc4df33af26ad652d8891314c07694a6f54199547fb9c2058cda9f688464644e1e43584adbe2ee3b06151279d2e24749078c9b29a43d12"
+    },
+    "stu_1792862377598_62139d": {
+      "uid": "stu_1792862377598_62139d",
+      "email": "sim_stu_16@test.com",
+      "displayName": "Contestant 16",
+      "studentId": "SIM_STU_16",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:37.599Z",
+      "salt": "d11975458834afd0c7b45c7fd06cff6c",
+      "passwordHash": "b64c27144b0e6de807be58dc87332f8337bd7f5511ec44c0f744b051905417f21f4ce31c801a76c6ca7a1c31b8d1b8eea43b68c4b82cbc5fabf9adeb7f374406"
+    },
+    "stu_1792862377695_030d93": {
+      "uid": "stu_1792862377695_030d93",
+      "email": "sim_stu_17@test.com",
+      "displayName": "Contestant 17",
+      "studentId": "SIM_STU_17",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:37.696Z",
+      "salt": "538cf09ce6c532c2655313266b712f9b",
+      "passwordHash": "09bcff2b455497350d12c16db8e12cb995a0c2b75b38c620e9461f155b664600de0e68b20d54df51852e2aa9956642aedbd5a4291aab2f0730b4d335061eaa7b"
+    },
+    "stu_1792862377795_351d89": {
+      "uid": "stu_1792862377795_351d89",
+      "email": "sim_stu_18@test.com",
+      "displayName": "Contestant 18",
+      "studentId": "SIM_STU_18",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:37.795Z",
+      "salt": "5d12058b115608676221cfee0c05735e",
+      "passwordHash": "602c2e6668dd13155a0653795167023e62599b4480f3786ce8082e6f3bbf8f81206273cb3f5dd65e6b96d703d2b4234eb34fefee9dbed996430ed27f635ce639"
+    },
+    "stu_1792862377892_8dde62": {
+      "uid": "stu_1792862377892_8dde62",
+      "email": "sim_stu_19@test.com",
+      "displayName": "Contestant 19",
+      "studentId": "SIM_STU_19",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:37.892Z",
+      "salt": "976639b1e1fbca1b1fdcf16b98a24754",
+      "passwordHash": "c8a98d2ffae34990a3b6103f2ea13dfe238d74558827b27a911887cd5ce6bea470d67e79a088144e2ac6282a4d81537039bd171c01b90d14a8d7b8c2212a4520"
+    },
+    "stu_1792862378002_0a7b05": {
+      "uid": "stu_1792862378002_0a7b05",
+      "email": "sim_stu_20@test.com",
+      "displayName": "Contestant 20",
+      "studentId": "SIM_STU_20",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:19:38.002Z",
+      "salt": "64cce79206b8bb44e41dd44953bfb51c",
+      "passwordHash": "610766693d0ef3c1523a9f8ccdc698ce2f3de7e629473e9faf9ad58cded5b894383fb1e6003ecdc4a6557575c4d0bea673db151d6032da229a7b26db3225986f"
+    },
+    "stu_1792863476931_a5ad75": {
+      "uid": "stu_1792863476931_a5ad75",
+      "email": "stu_1792863476931_a5ad75@quickbuzz.local",
+      "displayName": "Contestant 1",
+      "studentId": "USN-101",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.931Z",
+      "salt": "2e1b69ad6127cd47a85e66365527cfa5",
+      "passwordHash": ""
+    },
+    "stu_1792863476941_487567": {
+      "uid": "stu_1792863476941_487567",
+      "email": "stu_1792863476941_487567@quickbuzz.local",
+      "displayName": "Contestant 2",
+      "studentId": "USN-102",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.942Z",
+      "salt": "c77eebc4ab0ebe39bf330907b8797ced",
+      "passwordHash": ""
+    },
+    "stu_1792863476947_f724da": {
+      "uid": "stu_1792863476947_f724da",
+      "email": "stu_1792863476947_f724da@quickbuzz.local",
+      "displayName": "Contestant 3",
+      "studentId": "USN-103",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.948Z",
+      "salt": "5344ebb03a39e0da5948574642d05b18",
+      "passwordHash": ""
+    },
+    "stu_1792863476951_496211": {
+      "uid": "stu_1792863476951_496211",
+      "email": "stu_1792863476951_496211@quickbuzz.local",
+      "displayName": "Contestant 4",
+      "studentId": "USN-104",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.951Z",
+      "salt": "d147a5c8b08e9cf66123a43e2b915816",
+      "passwordHash": ""
+    },
+    "stu_1792863476954_c73fa5": {
+      "uid": "stu_1792863476954_c73fa5",
+      "email": "stu_1792863476954_c73fa5@quickbuzz.local",
+      "displayName": "Contestant 5",
+      "studentId": "USN-105",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.954Z",
+      "salt": "53191927b9c8a71d49601ed4553dc666",
+      "passwordHash": ""
+    },
+    "stu_1792863476957_734c2d": {
+      "uid": "stu_1792863476957_734c2d",
+      "email": "stu_1792863476957_734c2d@quickbuzz.local",
+      "displayName": "Contestant 6",
+      "studentId": "USN-106",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.957Z",
+      "salt": "9ee185345670d8e8e97e780cdaa24118",
+      "passwordHash": ""
+    },
+    "stu_1792863476960_fad130": {
+      "uid": "stu_1792863476960_fad130",
+      "email": "stu_1792863476960_fad130@quickbuzz.local",
+      "displayName": "Contestant 7",
+      "studentId": "USN-107",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.960Z",
+      "salt": "d988e35edb0c55856a8863c8c13a184b",
+      "passwordHash": ""
+    },
+    "stu_1792863476962_5658d9": {
+      "uid": "stu_1792863476962_5658d9",
+      "email": "stu_1792863476962_5658d9@quickbuzz.local",
+      "displayName": "Contestant 8",
+      "studentId": "USN-108",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.962Z",
+      "salt": "06fb8031852bd8375c32a81a43fcf85a",
+      "passwordHash": ""
+    },
+    "stu_1792863476965_ac4a95": {
+      "uid": "stu_1792863476965_ac4a95",
+      "email": "stu_1792863476965_ac4a95@quickbuzz.local",
+      "displayName": "Contestant 9",
+      "studentId": "USN-109",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.965Z",
+      "salt": "c07cdffa5247e49b9572d1cfbb0f86da",
+      "passwordHash": ""
+    },
+    "stu_1792863476967_d0ce84": {
+      "uid": "stu_1792863476967_d0ce84",
+      "email": "stu_1792863476967_d0ce84@quickbuzz.local",
+      "displayName": "Contestant 10",
+      "studentId": "USN-110",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.967Z",
+      "salt": "da5ab5e96914f11ca66ac93f0628a910",
+      "passwordHash": ""
+    },
+    "stu_1792863476970_fed95f": {
+      "uid": "stu_1792863476970_fed95f",
+      "email": "stu_1792863476970_fed95f@quickbuzz.local",
+      "displayName": "Contestant 11",
+      "studentId": "USN-111",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.970Z",
+      "salt": "27f0fbe0e18b8b6c6415097ba86a89f8",
+      "passwordHash": ""
+    },
+    "stu_1792863476972_7c169d": {
+      "uid": "stu_1792863476972_7c169d",
+      "email": "stu_1792863476972_7c169d@quickbuzz.local",
+      "displayName": "Contestant 12",
+      "studentId": "USN-112",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.972Z",
+      "salt": "218cef589c3511989dbd22d0fe4bd1af",
+      "passwordHash": ""
+    },
+    "stu_1792863476974_4e2ca2": {
+      "uid": "stu_1792863476974_4e2ca2",
+      "email": "stu_1792863476974_4e2ca2@quickbuzz.local",
+      "displayName": "Contestant 13",
+      "studentId": "USN-113",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.974Z",
+      "salt": "681485cd7cc20f7a96393a8fc043817f",
+      "passwordHash": ""
+    },
+    "stu_1792863476976_a2ed87": {
+      "uid": "stu_1792863476976_a2ed87",
+      "email": "stu_1792863476976_a2ed87@quickbuzz.local",
+      "displayName": "Contestant 14",
+      "studentId": "USN-114",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.976Z",
+      "salt": "9ba069a0716a57b26847d3195c52cef5",
+      "passwordHash": ""
+    },
+    "stu_1792863476978_da92d6": {
+      "uid": "stu_1792863476978_da92d6",
+      "email": "stu_1792863476978_da92d6@quickbuzz.local",
+      "displayName": "Contestant 15",
+      "studentId": "USN-115",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.978Z",
+      "salt": "ed80119d6efecd7303c511038dcbfcf4",
+      "passwordHash": ""
+    },
+    "stu_1792863476980_de3972": {
+      "uid": "stu_1792863476980_de3972",
+      "email": "stu_1792863476980_de3972@quickbuzz.local",
+      "displayName": "Contestant 16",
+      "studentId": "USN-116",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.980Z",
+      "salt": "4edd7316461ccfd097fee5c53b212220",
+      "passwordHash": ""
+    },
+    "stu_1792863476983_46b4bb": {
+      "uid": "stu_1792863476983_46b4bb",
+      "email": "stu_1792863476983_46b4bb@quickbuzz.local",
+      "displayName": "Contestant 17",
+      "studentId": "USN-117",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.983Z",
+      "salt": "1eed188d57f57ef395c72abeb1e6b801",
+      "passwordHash": ""
+    },
+    "stu_1792863476986_e2b871": {
+      "uid": "stu_1792863476986_e2b871",
+      "email": "stu_1792863476986_e2b871@quickbuzz.local",
+      "displayName": "Contestant 18",
+      "studentId": "USN-118",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.986Z",
+      "salt": "17ee171cb39e6707bcb272e2eb826181",
+      "passwordHash": ""
+    },
+    "stu_1792863476988_fcac93": {
+      "uid": "stu_1792863476988_fcac93",
+      "email": "stu_1792863476988_fcac93@quickbuzz.local",
+      "displayName": "Contestant 19",
+      "studentId": "USN-119",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.988Z",
+      "salt": "174e050ee4b56e970709d78b8e71f7c0",
+      "passwordHash": ""
+    },
+    "stu_1792863476990_9c223a": {
+      "uid": "stu_1792863476990_9c223a",
+      "email": "stu_1792863476990_9c223a@quickbuzz.local",
+      "displayName": "Contestant 20",
+      "studentId": "USN-120",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:37:56.990Z",
+      "salt": "e8835101ead2adbf94fe8aa2e8d2aa1f",
+      "passwordHash": ""
+    },
+    "stu_1792863774795_f8284c": {
+      "uid": "stu_1792863774795_f8284c",
+      "email": "stu_1792863774795_f8284c@quickbuzz.local",
+      "displayName": "Contestant 1",
+      "studentId": "USN-101",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.795Z",
+      "salt": "d60d774b0045def639d5bfcca1997afa",
+      "passwordHash": ""
+    },
+    "stu_1792863774801_57529a": {
+      "uid": "stu_1792863774801_57529a",
+      "email": "stu_1792863774801_57529a@quickbuzz.local",
+      "displayName": "Contestant 2",
+      "studentId": "USN-102",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.801Z",
+      "salt": "e714805b8ff52ff580545b2f5bb34677",
+      "passwordHash": ""
+    },
+    "stu_1792863774806_b08424": {
+      "uid": "stu_1792863774806_b08424",
+      "email": "stu_1792863774806_b08424@quickbuzz.local",
+      "displayName": "Contestant 3",
+      "studentId": "USN-103",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.806Z",
+      "salt": "c1c52afa74ae60498b631447a48b2bd7",
+      "passwordHash": ""
+    },
+    "stu_1792863774810_ab0784": {
+      "uid": "stu_1792863774810_ab0784",
+      "email": "stu_1792863774810_ab0784@quickbuzz.local",
+      "displayName": "Contestant 4",
+      "studentId": "USN-104",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.810Z",
+      "salt": "937049916285fb747fe9a5bc8747ccca",
+      "passwordHash": ""
+    },
+    "stu_1792863774814_8d6302": {
+      "uid": "stu_1792863774814_8d6302",
+      "email": "stu_1792863774814_8d6302@quickbuzz.local",
+      "displayName": "Contestant 5",
+      "studentId": "USN-105",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.814Z",
+      "salt": "c68d943b666c9386f64ec41694a09ac7",
+      "passwordHash": ""
+    },
+    "stu_1792863774817_8f4b86": {
+      "uid": "stu_1792863774817_8f4b86",
+      "email": "stu_1792863774817_8f4b86@quickbuzz.local",
+      "displayName": "Contestant 6",
+      "studentId": "USN-106",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.817Z",
+      "salt": "9188bc316b13ae7268ddd8bcdd5e08e1",
+      "passwordHash": ""
+    },
+    "stu_1792863774820_c8953c": {
+      "uid": "stu_1792863774820_c8953c",
+      "email": "stu_1792863774820_c8953c@quickbuzz.local",
+      "displayName": "Contestant 7",
+      "studentId": "USN-107",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.820Z",
+      "salt": "b2fea430a277a0f666b0acb6330c8ac6",
+      "passwordHash": ""
+    },
+    "stu_1792863774822_a3106e": {
+      "uid": "stu_1792863774822_a3106e",
+      "email": "stu_1792863774822_a3106e@quickbuzz.local",
+      "displayName": "Contestant 8",
+      "studentId": "USN-108",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.822Z",
+      "salt": "72c2fdd5dca5cf70477f344a8621d907",
+      "passwordHash": ""
+    },
+    "stu_1792863774825_2485ea": {
+      "uid": "stu_1792863774825_2485ea",
+      "email": "stu_1792863774825_2485ea@quickbuzz.local",
+      "displayName": "Contestant 9",
+      "studentId": "USN-109",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.825Z",
+      "salt": "2a09ab8c8bf071be339fc4a37d482c28",
+      "passwordHash": ""
+    },
+    "stu_1792863774828_374e7a": {
+      "uid": "stu_1792863774828_374e7a",
+      "email": "stu_1792863774828_374e7a@quickbuzz.local",
+      "displayName": "Contestant 10",
+      "studentId": "USN-110",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.828Z",
+      "salt": "615cd7faca268625663f7fb1c781efcc",
+      "passwordHash": ""
+    },
+    "stu_1792863774831_13afcc": {
+      "uid": "stu_1792863774831_13afcc",
+      "email": "stu_1792863774831_13afcc@quickbuzz.local",
+      "displayName": "Contestant 11",
+      "studentId": "USN-111",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.831Z",
+      "salt": "7824f206cec8c6188f2b5fd5eb34f688",
+      "passwordHash": ""
+    },
+    "stu_1792863774834_ecb375": {
+      "uid": "stu_1792863774834_ecb375",
+      "email": "stu_1792863774834_ecb375@quickbuzz.local",
+      "displayName": "Contestant 12",
+      "studentId": "USN-112",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.834Z",
+      "salt": "e433bfa53151e6629607ee40c1c59391",
+      "passwordHash": ""
+    },
+    "stu_1792863774836_57a583": {
+      "uid": "stu_1792863774836_57a583",
+      "email": "stu_1792863774836_57a583@quickbuzz.local",
+      "displayName": "Contestant 13",
+      "studentId": "USN-113",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.836Z",
+      "salt": "787adaf467e27db4e37b3798900e536a",
+      "passwordHash": ""
+    },
+    "stu_1792863774839_2606cc": {
+      "uid": "stu_1792863774839_2606cc",
+      "email": "stu_1792863774839_2606cc@quickbuzz.local",
+      "displayName": "Contestant 14",
+      "studentId": "USN-114",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.839Z",
+      "salt": "2a797205d7122ee1b85ce8fd1a60f8af",
+      "passwordHash": ""
+    },
+    "stu_1792863774841_7a85be": {
+      "uid": "stu_1792863774841_7a85be",
+      "email": "stu_1792863774841_7a85be@quickbuzz.local",
+      "displayName": "Contestant 15",
+      "studentId": "USN-115",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.841Z",
+      "salt": "59ef615ca29ac5b2000e42f8716e0b56",
+      "passwordHash": ""
+    },
+    "stu_1792863774844_6940ac": {
+      "uid": "stu_1792863774844_6940ac",
+      "email": "stu_1792863774844_6940ac@quickbuzz.local",
+      "displayName": "Contestant 16",
+      "studentId": "USN-116",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.844Z",
+      "salt": "5efabb4b6109d4781fe00f3e3250637e",
+      "passwordHash": ""
+    },
+    "stu_1792863774847_8ce610": {
+      "uid": "stu_1792863774847_8ce610",
+      "email": "stu_1792863774847_8ce610@quickbuzz.local",
+      "displayName": "Contestant 17",
+      "studentId": "USN-117",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.847Z",
+      "salt": "8c26fbed83a3fb0645595cacddc880ac",
+      "passwordHash": ""
+    },
+    "stu_1792863774850_2cc441": {
+      "uid": "stu_1792863774850_2cc441",
+      "email": "stu_1792863774850_2cc441@quickbuzz.local",
+      "displayName": "Contestant 18",
+      "studentId": "USN-118",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.850Z",
+      "salt": "a8f74760ed7a5c69b81e2ced1849fada",
+      "passwordHash": ""
+    },
+    "stu_1792863774852_3c6f98": {
+      "uid": "stu_1792863774852_3c6f98",
+      "email": "stu_1792863774852_3c6f98@quickbuzz.local",
+      "displayName": "Contestant 19",
+      "studentId": "USN-119",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.852Z",
+      "salt": "104cc2e8fffa56bdf4c66e67c2788578",
+      "passwordHash": ""
+    },
+    "stu_1792863774855_80ea2e": {
+      "uid": "stu_1792863774855_80ea2e",
+      "email": "stu_1792863774855_80ea2e@quickbuzz.local",
+      "displayName": "Contestant 20",
+      "studentId": "USN-120",
+      "role": "student",
+      "accountStatus": "active",
+      "createdAt": "2026-10-24T17:42:54.855Z",
+      "salt": "c2b6c3c70e5ab9e58bc76247b048aa29",
+      "passwordHash": ""
+    }
+  },
+  "sessions": {
+    "ses_main_2026": {
+      "sessionId": "ses_main_2026",
+      "title": "Inter-College Tech Symposium — Fastest Finger First",
+      "sessionCode": "BUZZ99",
+      "status": "active",
+      "createdAt": "2026-10-24T17:19:34.307Z",
+      "createdBy": "admin_root_1",
+      "currentRoundId": "rnd_q1",
+      "rounds": {
+        "rnd_q1": {
+          "roundId": "rnd_q1",
+          "roundNumber": 1,
+          "questionText": "Which computer scientist is widely considered the father of theoretical computer science and artificial intelligence?",
+          "status": "IDLE",
+          "winnerUid": null,
+          "winnerStudentId": null,
+          "winnerNameSnapshot": null,
+          "winnerAcceptedAt": null,
+          "winnerLatencyMs": null,
+          "roundOpenedAt": null,
+          "roundClosedAt": null,
+          "attempts": []
+        }
+      },
+      "participants": {
+        "stu_1": {
+          "uid": "stu_1",
+          "displayName": "Alex Turner",
+          "studentId": "1MS21CS042",
+          "joinedAt": "2026-10-24T17:19:34.307Z",
+          "lastSeen": 1792863469774,
+          "isConnected": true
+        },
+        "stu_2": {
+          "uid": "stu_2",
+          "displayName": "Priya Sharma",
+          "studentId": "1MS21CS088",
+          "joinedAt": "2026-10-24T17:19:34.307Z",
+          "lastSeen": 1792862374307,
+          "isConnected": true
+        }
+      }
+    },
+    "ses_1792862376323": {
+      "sessionId": "ses_1792862376323",
+      "title": "Automated Concurrency Stress Test",
+      "sessionCode": "TEST99",
+      "status": "active",
+      "createdAt": "2026-10-24T17:19:36.323Z",
+      "createdBy": "admin_root_1",
+      "currentRoundId": "rnd_1792862376323_1",
+      "rounds": {
+        "rnd_1792862376323_1": {
+          "roundId": "rnd_1792862376323_1",
+          "roundNumber": 1,
+          "questionText": "Concurrency Test: What is 2 + 2?",
+          "status": "WINNER_LOCKED",
+          "winnerUid": "stu_1",
+          "winnerStudentId": "1MS21CS042",
+          "winnerNameSnapshot": "Alex Turner",
+          "winnerAcceptedAt": 1792862378068,
+          "winnerLatencyMs": 1740,
+          "roundOpenedAt": 1792862376328,
+          "roundClosedAt": null,
+          "attempts": [
+            {
+              "uid": "stu_1",
+              "studentId": "1MS21CS042",
+              "displayName": "Alex Turner",
+              "submittedAt": 1792862378068,
+              "status": "ACCEPTED_WINNER",
+              "latencyMs": 1740
+            },
+            {
+              "uid": "stu_2",
+              "studentId": "1MS21CS088",
+              "displayName": "Priya Sharma",
+              "submittedAt": 1792862378070,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1742
+            },
+            {
+              "uid": "stu_3",
+              "studentId": "1MS21CS019",
+              "displayName": "David Chen",
+              "submittedAt": 1792862378072,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1744
+            },
+            {
+              "uid": "stu_1792862376376_5ad02b",
+              "studentId": "SIM_STU_4",
+              "displayName": "Contestant 4",
+              "submittedAt": 1792862378073,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1745
+            },
+            {
+              "uid": "stu_1792862376483_dc75f6",
+              "studentId": "SIM_STU_5",
+              "displayName": "Contestant 5",
+              "submittedAt": 1792862378075,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1747
+            },
+            {
+              "uid": "stu_1792862376583_c1d9b6",
+              "studentId": "SIM_STU_6",
+              "displayName": "Contestant 6",
+              "submittedAt": 1792862378076,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1748
+            },
+            {
+              "uid": "stu_1792862376688_b97ebb",
+              "studentId": "SIM_STU_7",
+              "displayName": "Contestant 7",
+              "submittedAt": 1792862378077,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1749
+            },
+            {
+              "uid": "stu_1792862376788_3f287a",
+              "studentId": "SIM_STU_8",
+              "displayName": "Contestant 8",
+              "submittedAt": 1792862378078,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1750
+            },
+            {
+              "uid": "stu_1792862376886_e55008",
+              "studentId": "SIM_STU_9",
+              "displayName": "Contestant 9",
+              "submittedAt": 1792862378079,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1751
+            },
+            {
+              "uid": "stu_1792862376982_d7915c",
+              "studentId": "SIM_STU_10",
+              "displayName": "Contestant 10",
+              "submittedAt": 1792862378080,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1752
+            },
+            {
+              "uid": "stu_1792862377083_d616d7",
+              "studentId": "SIM_STU_11",
+              "displayName": "Contestant 11",
+              "submittedAt": 1792862378082,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1754
+            },
+            {
+              "uid": "stu_1792862377188_57d0e3",
+              "studentId": "SIM_STU_12",
+              "displayName": "Contestant 12",
+              "submittedAt": 1792862378083,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1755
+            },
+            {
+              "uid": "stu_1792862377494_35249f",
+              "studentId": "SIM_STU_15",
+              "displayName": "Contestant 15",
+              "submittedAt": 1792862378084,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1756
+            },
+            {
+              "uid": "stu_1792862377695_030d93",
+              "studentId": "SIM_STU_17",
+              "displayName": "Contestant 17",
+              "submittedAt": 1792862378085,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1757
+            },
+            {
+              "uid": "stu_1792862377795_351d89",
+              "studentId": "SIM_STU_18",
+              "displayName": "Contestant 18",
+              "submittedAt": 1792862378087,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1759
+            },
+            {
+              "uid": "stu_1792862377892_8dde62",
+              "studentId": "SIM_STU_19",
+              "displayName": "Contestant 19",
+              "submittedAt": 1792862378088,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1760
+            },
+            {
+              "uid": "stu_1792862377295_d8ba36",
+              "studentId": "SIM_STU_13",
+              "displayName": "Contestant 13",
+              "submittedAt": 1792862378089,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1761
+            },
+            {
+              "uid": "stu_1792862377395_50dd29",
+              "studentId": "SIM_STU_14",
+              "displayName": "Contestant 14",
+              "submittedAt": 1792862378090,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1762
+            },
+            {
+              "uid": "stu_1792862377598_62139d",
+              "studentId": "SIM_STU_16",
+              "displayName": "Contestant 16",
+              "submittedAt": 1792862378091,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1763
+            },
+            {
+              "uid": "stu_1792862378002_0a7b05",
+              "studentId": "SIM_STU_20",
+              "displayName": "Contestant 20",
+              "submittedAt": 1792862378092,
+              "status": "REJECTED_ROUND_CLOSED",
+              "latencyMs": 1764
+            }
+          ]
+        }
+      },
+      "participants": {
+        "stu_1792863476931_a5ad75": {
+          "uid": "stu_1792863476931_a5ad75",
+          "displayName": "Contestant 1",
+          "studentId": "USN-101",
+          "joinedAt": "2026-10-24T17:37:56.931Z",
+          "lastSeen": 1792863476931,
+          "isConnected": true
+        },
+        "stu_1792863476941_487567": {
+          "uid": "stu_1792863476941_487567",
+          "displayName": "Contestant 2",
+          "studentId": "USN-102",
+          "joinedAt": "2026-10-24T17:37:56.942Z",
+          "lastSeen": 1792863476942,
+          "isConnected": true
+        },
+        "stu_1792863476947_f724da": {
+          "uid": "stu_1792863476947_f724da",
+          "displayName": "Contestant 3",
+          "studentId": "USN-103",
+          "joinedAt": "2026-10-24T17:37:56.948Z",
+          "lastSeen": 1792863476948,
+          "isConnected": true
+        },
+        "stu_1792863476951_496211": {
+          "uid": "stu_1792863476951_496211",
+          "displayName": "Contestant 4",
+          "studentId": "USN-104",
+          "joinedAt": "2026-10-24T17:37:56.951Z",
+          "lastSeen": 1792863476951,
+          "isConnected": true
+        },
+        "stu_1792863476954_c73fa5": {
+          "uid": "stu_1792863476954_c73fa5",
+          "displayName": "Contestant 5",
+          "studentId": "USN-105",
+          "joinedAt": "2026-10-24T17:37:56.954Z",
+          "lastSeen": 1792863476954,
+          "isConnected": true
+        },
+        "stu_1792863476957_734c2d": {
+          "uid": "stu_1792863476957_734c2d",
+          "displayName": "Contestant 6",
+          "studentId": "USN-106",
+          "joinedAt": "2026-10-24T17:37:56.957Z",
+          "lastSeen": 1792863476957,
+          "isConnected": true
+        },
+        "stu_1792863476960_fad130": {
+          "uid": "stu_1792863476960_fad130",
+          "displayName": "Contestant 7",
+          "studentId": "USN-107",
+          "joinedAt": "2026-10-24T17:37:56.960Z",
+          "lastSeen": 1792863476960,
+          "isConnected": true
+        },
+        "stu_1792863476962_5658d9": {
+          "uid": "stu_1792863476962_5658d9",
+          "displayName": "Contestant 8",
+          "studentId": "USN-108",
+          "joinedAt": "2026-10-24T17:37:56.962Z",
+          "lastSeen": 1792863476962,
+          "isConnected": true
+        },
+        "stu_1792863476965_ac4a95": {
+          "uid": "stu_1792863476965_ac4a95",
+          "displayName": "Contestant 9",
+          "studentId": "USN-109",
+          "joinedAt": "2026-10-24T17:37:56.965Z",
+          "lastSeen": 1792863476965,
+          "isConnected": true
+        },
+        "stu_1792863476967_d0ce84": {
+          "uid": "stu_1792863476967_d0ce84",
+          "displayName": "Contestant 10",
+          "studentId": "USN-110",
+          "joinedAt": "2026-10-24T17:37:56.967Z",
+          "lastSeen": 1792863476967,
+          "isConnected": true
+        },
+        "stu_1792863476970_fed95f": {
+          "uid": "stu_1792863476970_fed95f",
+          "displayName": "Contestant 11",
+          "studentId": "USN-111",
+          "joinedAt": "2026-10-24T17:37:56.970Z",
+          "lastSeen": 1792863476970,
+          "isConnected": true
+        },
+        "stu_1792863476972_7c169d": {
+          "uid": "stu_1792863476972_7c169d",
+          "displayName": "Contestant 12",
+          "studentId": "USN-112",
+          "joinedAt": "2026-10-24T17:37:56.972Z",
+          "lastSeen": 1792863476972,
+          "isConnected": true
+        },
+        "stu_1792863476974_4e2ca2": {
+          "uid": "stu_1792863476974_4e2ca2",
+          "displayName": "Contestant 13",
+          "studentId": "USN-113",
+          "joinedAt": "2026-10-24T17:37:56.974Z",
+          "lastSeen": 1792863476974,
+          "isConnected": true
+        },
+        "stu_1792863476976_a2ed87": {
+          "uid": "stu_1792863476976_a2ed87",
+          "displayName": "Contestant 14",
+          "studentId": "USN-114",
+          "joinedAt": "2026-10-24T17:37:56.976Z",
+          "lastSeen": 1792863476976,
+          "isConnected": true
+        },
+        "stu_1792863476978_da92d6": {
+          "uid": "stu_1792863476978_da92d6",
+          "displayName": "Contestant 15",
+          "studentId": "USN-115",
+          "joinedAt": "2026-10-24T17:37:56.978Z",
+          "lastSeen": 1792863476978,
+          "isConnected": true
+        },
+        "stu_1792863476980_de3972": {
+          "uid": "stu_1792863476980_de3972",
+          "displayName": "Contestant 16",
+          "studentId": "USN-116",
+          "joinedAt": "2026-10-24T17:37:56.980Z",
+          "lastSeen": 1792863476980,
+          "isConnected": true
+        },
+        "stu_1792863476983_46b4bb": {
+          "uid": "stu_1792863476983_46b4bb",
+          "displayName": "Contestant 17",
+          "studentId": "USN-117",
+          "joinedAt": "2026-10-24T17:37:56.983Z",
+          "lastSeen": 1792863476983,
+          "isConnected": true
+        },
+        "stu_1792863476986_e2b871": {
+          "uid": "stu_1792863476986_e2b871",
+          "displayName": "Contestant 18",
+          "studentId": "USN-118",
+          "joinedAt": "2026-10-24T17:37:56.986Z",
+          "lastSeen": 1792863476986,
+          "isConnected": true
+        },
+        "stu_1792863476988_fcac93": {
+          "uid": "stu_1792863476988_fcac93",
+          "displayName": "Contestant 19",
+          "studentId": "USN-119",
+          "joinedAt": "2026-10-24T17:37:56.988Z",
+          "lastSeen": 1792863476988,
+          "isConnected": true
+        },
+        "stu_1792863476990_9c223a": {
+          "uid": "stu_1792863476990_9c223a",
+          "displayName": "Contestant 20",
+          "studentId": "USN-120",
+          "joinedAt": "2026-10-24T17:37:56.990Z",
+          "lastSeen": 1792863476990,
+          "isConnected": true
+        },
+        "stu_1792863774795_f8284c": {
+          "uid": "stu_1792863774795_f8284c",
+          "displayName": "Contestant 1",
+          "studentId": "USN-101",
+          "joinedAt": "2026-10-24T17:42:54.795Z",
+          "lastSeen": 1792863774795,
+          "isConnected": true
+        },
+        "stu_1792863774801_57529a": {
+          "uid": "stu_1792863774801_57529a",
+          "displayName": "Contestant 2",
+          "studentId": "USN-102",
+          "joinedAt": "2026-10-24T17:42:54.801Z",
+          "lastSeen": 1792863774801,
+          "isConnected": true
+        },
+        "stu_1792863774806_b08424": {
+          "uid": "stu_1792863774806_b08424",
+          "displayName": "Contestant 3",
+          "studentId": "USN-103",
+          "joinedAt": "2026-10-24T17:42:54.806Z",
+          "lastSeen": 1792863774806,
+          "isConnected": true
+        },
+        "stu_1792863774810_ab0784": {
+          "uid": "stu_1792863774810_ab0784",
+          "displayName": "Contestant 4",
+          "studentId": "USN-104",
+          "joinedAt": "2026-10-24T17:42:54.810Z",
+          "lastSeen": 1792863774810,
+          "isConnected": true
+        },
+        "stu_1792863774814_8d6302": {
+          "uid": "stu_1792863774814_8d6302",
+          "displayName": "Contestant 5",
+          "studentId": "USN-105",
+          "joinedAt": "2026-10-24T17:42:54.814Z",
+          "lastSeen": 1792863774814,
+          "isConnected": true
+        },
+        "stu_1792863774817_8f4b86": {
+          "uid": "stu_1792863774817_8f4b86",
+          "displayName": "Contestant 6",
+          "studentId": "USN-106",
+          "joinedAt": "2026-10-24T17:42:54.817Z",
+          "lastSeen": 1792863774817,
+          "isConnected": true
+        },
+        "stu_1792863774820_c8953c": {
+          "uid": "stu_1792863774820_c8953c",
+          "displayName": "Contestant 7",
+          "studentId": "USN-107",
+          "joinedAt": "2026-10-24T17:42:54.820Z",
+          "lastSeen": 1792863774820,
+          "isConnected": true
+        },
+        "stu_1792863774822_a3106e": {
+          "uid": "stu_1792863774822_a3106e",
+          "displayName": "Contestant 8",
+          "studentId": "USN-108",
+          "joinedAt": "2026-10-24T17:42:54.822Z",
+          "lastSeen": 1792863774822,
+          "isConnected": true
+        },
+        "stu_1792863774825_2485ea": {
+          "uid": "stu_1792863774825_2485ea",
+          "displayName": "Contestant 9",
+          "studentId": "USN-109",
+          "joinedAt": "2026-10-24T17:42:54.825Z",
+          "lastSeen": 1792863774825,
+          "isConnected": true
+        },
+        "stu_1792863774828_374e7a": {
+          "uid": "stu_1792863774828_374e7a",
+          "displayName": "Contestant 10",
+          "studentId": "USN-110",
+          "joinedAt": "2026-10-24T17:42:54.828Z",
+          "lastSeen": 1792863774828,
+          "isConnected": true
+        },
+        "stu_1792863774831_13afcc": {
+          "uid": "stu_1792863774831_13afcc",
+          "displayName": "Contestant 11",
+          "studentId": "USN-111",
+          "joinedAt": "2026-10-24T17:42:54.831Z",
+          "lastSeen": 1792863774831,
+          "isConnected": true
+        },
+        "stu_1792863774834_ecb375": {
+          "uid": "stu_1792863774834_ecb375",
+          "displayName": "Contestant 12",
+          "studentId": "USN-112",
+          "joinedAt": "2026-10-24T17:42:54.834Z",
+          "lastSeen": 1792863774834,
+          "isConnected": true
+        },
+        "stu_1792863774836_57a583": {
+          "uid": "stu_1792863774836_57a583",
+          "displayName": "Contestant 13",
+          "studentId": "USN-113",
+          "joinedAt": "2026-10-24T17:42:54.836Z",
+          "lastSeen": 1792863774836,
+          "isConnected": true
+        },
+        "stu_1792863774839_2606cc": {
+          "uid": "stu_1792863774839_2606cc",
+          "displayName": "Contestant 14",
+          "studentId": "USN-114",
+          "joinedAt": "2026-10-24T17:42:54.839Z",
+          "lastSeen": 1792863774839,
+          "isConnected": true
+        },
+        "stu_1792863774841_7a85be": {
+          "uid": "stu_1792863774841_7a85be",
+          "displayName": "Contestant 15",
+          "studentId": "USN-115",
+          "joinedAt": "2026-10-24T17:42:54.841Z",
+          "lastSeen": 1792863774841,
+          "isConnected": true
+        },
+        "stu_1792863774844_6940ac": {
+          "uid": "stu_1792863774844_6940ac",
+          "displayName": "Contestant 16",
+          "studentId": "USN-116",
+          "joinedAt": "2026-10-24T17:42:54.844Z",
+          "lastSeen": 1792863774844,
+          "isConnected": true
+        },
+        "stu_1792863774847_8ce610": {
+          "uid": "stu_1792863774847_8ce610",
+          "displayName": "Contestant 17",
+          "studentId": "USN-117",
+          "joinedAt": "2026-10-24T17:42:54.847Z",
+          "lastSeen": 1792863774847,
+          "isConnected": true
+        },
+        "stu_1792863774850_2cc441": {
+          "uid": "stu_1792863774850_2cc441",
+          "displayName": "Contestant 18",
+          "studentId": "USN-118",
+          "joinedAt": "2026-10-24T17:42:54.850Z",
+          "lastSeen": 1792863774850,
+          "isConnected": true
+        },
+        "stu_1792863774852_3c6f98": {
+          "uid": "stu_1792863774852_3c6f98",
+          "displayName": "Contestant 19",
+          "studentId": "USN-119",
+          "joinedAt": "2026-10-24T17:42:54.852Z",
+          "lastSeen": 1792863774852,
+          "isConnected": true
+        },
+        "stu_1792863774855_80ea2e": {
+          "uid": "stu_1792863774855_80ea2e",
+          "displayName": "Contestant 20",
+          "studentId": "USN-120",
+          "joinedAt": "2026-10-24T17:42:54.855Z",
+          "lastSeen": 1792863774855,
+          "isConnected": true
+        }
+      }
+    },
+    "ses_1792862405100": {
+      "sessionId": "ses_1792862405100",
+      "title": "Automated Concurrency Stress Test",
+      "sessionCode": "TEST99",
+      "status": "active",
+      "createdAt": "2026-10-24T17:20:05.100Z",
+      "createdBy": "admin_root_1",
+      "currentRoundId": "rnd_1792862405100_1",
+      "rounds": {
+        "rnd_1792862405100_1": {
+          "roundId": "rnd_1792862405100_1",
+          "roundNumber": 1,
+          "questionText": "Concurrency Test: What is 2 + 2?",
+          "status": "CLOSED",
+          "winnerUid": "stu_1",
+          "winnerStudentId": "1MS21CS042",
+          "winnerNameSnapshot": "Alex Turner",
+          "winnerAcceptedAt": 1792862406030,
+          "winnerLatencyMs": 923,
+          "roundOpenedAt": 1792862405107,
+          "roundClosedAt": 1792862406067,
+          "attempts": [
+            {
+              "uid": "stu_1",
+              "studentId": "1MS21CS042",
+              "displayName": "Alex Turner",
+              "submittedAt": 1792862406030,
+              "status": "ACCEPTED_WINNER",
+              "latencyMs": 923
+            },
+            {
+              "uid": "stu_3",
+              "studentId": "1MS21CS019",
+              "displayName": "David Chen",
+              "submittedAt": 1792862406033,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 926
+            },
+            {
+              "uid": "stu_1792862376376_5ad02b",
+              "studentId": "SIM_STU_4",
+              "displayName": "Contestant 4",
+              "submittedAt": 1792862406035,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 928
+            },
+            {
+              "uid": "stu_1792862376583_c1d9b6",
+              "studentId": "SIM_STU_6",
+              "displayName": "Contestant 6",
+              "submittedAt": 1792862406036,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 929
+            },
+            {
+              "uid": "stu_2",
+              "studentId": "1MS21CS088",
+              "displayName": "Priya Sharma",
+              "submittedAt": 1792862406037,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 930
+            },
+            {
+              "uid": "stu_1792862376688_b97ebb",
+              "studentId": "SIM_STU_7",
+              "displayName": "Contestant 7",
+              "submittedAt": 1792862406038,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 931
+            },
+            {
+              "uid": "stu_1792862376483_dc75f6",
+              "studentId": "SIM_STU_5",
+              "displayName": "Contestant 5",
+              "submittedAt": 1792862406040,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 933
+            },
+            {
+              "uid": "stu_1792862376886_e55008",
+              "studentId": "SIM_STU_9",
+              "displayName": "Contestant 9",
+              "submittedAt": 1792862406041,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 934
+            },
+            {
+              "uid": "stu_1792862377188_57d0e3",
+              "studentId": "SIM_STU_12",
+              "displayName": "Contestant 12",
+              "submittedAt": 1792862406043,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 936
+            },
+            {
+              "uid": "stu_1792862377295_d8ba36",
+              "studentId": "SIM_STU_13",
+              "displayName": "Contestant 13",
+              "submittedAt": 1792862406044,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 937
+            },
+            {
+              "uid": "stu_1792862377892_8dde62",
+              "studentId": "SIM_STU_19",
+              "displayName": "Contestant 19",
+              "submittedAt": 1792862406046,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 939
+            },
+            {
+              "uid": "stu_1792862376788_3f287a",
+              "studentId": "SIM_STU_8",
+              "displayName": "Contestant 8",
+              "submittedAt": 1792862406047,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 940
+            },
+            {
+              "uid": "stu_1792862376982_d7915c",
+              "studentId": "SIM_STU_10",
+              "displayName": "Contestant 10",
+              "submittedAt": 1792862406048,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 941
+            },
+            {
+              "uid": "stu_1792862377083_d616d7",
+              "studentId": "SIM_STU_11",
+              "displayName": "Contestant 11",
+              "submittedAt": 1792862406049,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 942
+            },
+            {
+              "uid": "stu_1792862377395_50dd29",
+              "studentId": "SIM_STU_14",
+              "displayName": "Contestant 14",
+              "submittedAt": 1792862406050,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 943
+            },
+            {
+              "uid": "stu_1792862377494_35249f",
+              "studentId": "SIM_STU_15",
+              "displayName": "Contestant 15",
+              "submittedAt": 1792862406052,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 945
+            },
+            {
+              "uid": "stu_1792862377695_030d93",
+              "studentId": "SIM_STU_17",
+              "displayName": "Contestant 17",
+              "submittedAt": 1792862406054,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 947
+            },
+            {
+              "uid": "stu_1792862377598_62139d",
+              "studentId": "SIM_STU_16",
+              "displayName": "Contestant 16",
+              "submittedAt": 1792862406058,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 951
+            },
+            {
+              "uid": "stu_1792862377795_351d89",
+              "studentId": "SIM_STU_18",
+              "displayName": "Contestant 18",
+              "submittedAt": 1792862406060,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 953
+            },
+            {
+              "uid": "stu_1792862378002_0a7b05",
+              "studentId": "SIM_STU_20",
+              "displayName": "Contestant 20",
+              "submittedAt": 1792862406061,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 954
+            },
+            {
+              "uid": "stu_1",
+              "studentId": "1MS21CS042",
+              "displayName": "Alex Turner",
+              "submittedAt": 1792862406070,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 963
+            }
+          ]
+        }
+      },
+      "participants": {}
+    },
+    "ses_1792863476921": {
+      "sessionId": "ses_1792863476921",
+      "title": "Automated Concurrency Stress Test",
+      "sessionCode": "TEST99",
+      "status": "active",
+      "createdAt": "2026-10-24T17:37:56.921Z",
+      "createdBy": "admin_root_1",
+      "currentRoundId": "rnd_1792863476921_1",
+      "rounds": {
+        "rnd_1792863476921_1": {
+          "roundId": "rnd_1792863476921_1",
+          "roundNumber": 1,
+          "questionText": "Concurrency Test: What is 2 + 2?",
+          "status": "CLOSED",
+          "winnerUid": "stu_1792863476931_a5ad75",
+          "winnerStudentId": "USN-101",
+          "winnerNameSnapshot": "Contestant 1",
+          "winnerAcceptedAt": 1792863477002,
+          "winnerLatencyMs": 75,
+          "roundOpenedAt": 1792863476927,
+          "roundClosedAt": 1792863477040,
+          "attempts": [
+            {
+              "uid": "stu_1792863476931_a5ad75",
+              "studentId": "USN-101",
+              "displayName": "Contestant 1",
+              "submittedAt": 1792863477002,
+              "status": "ACCEPTED_WINNER",
+              "latencyMs": 75
+            },
+            {
+              "uid": "stu_1792863476941_487567",
+              "studentId": "USN-102",
+              "displayName": "Contestant 2",
+              "submittedAt": 1792863477004,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 77
+            },
+            {
+              "uid": "stu_1792863476967_d0ce84",
+              "studentId": "USN-110",
+              "displayName": "Contestant 10",
+              "submittedAt": 1792863477006,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 79
+            },
+            {
+              "uid": "stu_1792863476980_de3972",
+              "studentId": "USN-116",
+              "displayName": "Contestant 16",
+              "submittedAt": 1792863477007,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 80
+            },
+            {
+              "uid": "stu_1792863476947_f724da",
+              "studentId": "USN-103",
+              "displayName": "Contestant 3",
+              "submittedAt": 1792863477009,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 82
+            },
+            {
+              "uid": "stu_1792863476951_496211",
+              "studentId": "USN-104",
+              "displayName": "Contestant 4",
+              "submittedAt": 1792863477010,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 83
+            },
+            {
+              "uid": "stu_1792863476957_734c2d",
+              "studentId": "USN-106",
+              "displayName": "Contestant 6",
+              "submittedAt": 1792863477012,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 85
+            },
+            {
+              "uid": "stu_1792863476965_ac4a95",
+              "studentId": "USN-109",
+              "displayName": "Contestant 9",
+              "submittedAt": 1792863477015,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 88
+            },
+            {
+              "uid": "stu_1792863476972_7c169d",
+              "studentId": "USN-112",
+              "displayName": "Contestant 12",
+              "submittedAt": 1792863477016,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 89
+            },
+            {
+              "uid": "stu_1792863476976_a2ed87",
+              "studentId": "USN-114",
+              "displayName": "Contestant 14",
+              "submittedAt": 1792863477021,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 94
+            },
+            {
+              "uid": "stu_1792863476986_e2b871",
+              "studentId": "USN-118",
+              "displayName": "Contestant 18",
+              "submittedAt": 1792863477023,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 96
+            },
+            {
+              "uid": "stu_1792863476960_fad130",
+              "studentId": "USN-107",
+              "displayName": "Contestant 7",
+              "submittedAt": 1792863477024,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 97
+            },
+            {
+              "uid": "stu_1792863476990_9c223a",
+              "studentId": "USN-120",
+              "displayName": "Contestant 20",
+              "submittedAt": 1792863477026,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 99
+            },
+            {
+              "uid": "stu_1792863476954_c73fa5",
+              "studentId": "USN-105",
+              "displayName": "Contestant 5",
+              "submittedAt": 1792863477027,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 100
+            },
+            {
+              "uid": "stu_1792863476962_5658d9",
+              "studentId": "USN-108",
+              "displayName": "Contestant 8",
+              "submittedAt": 1792863477029,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 102
+            },
+            {
+              "uid": "stu_1792863476970_fed95f",
+              "studentId": "USN-111",
+              "displayName": "Contestant 11",
+              "submittedAt": 1792863477030,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 103
+            },
+            {
+              "uid": "stu_1792863476974_4e2ca2",
+              "studentId": "USN-113",
+              "displayName": "Contestant 13",
+              "submittedAt": 1792863477032,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 105
+            },
+            {
+              "uid": "stu_1792863476978_da92d6",
+              "studentId": "USN-115",
+              "displayName": "Contestant 15",
+              "submittedAt": 1792863477033,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 106
+            },
+            {
+              "uid": "stu_1792863476983_46b4bb",
+              "studentId": "USN-117",
+              "displayName": "Contestant 17",
+              "submittedAt": 1792863477034,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 107
+            },
+            {
+              "uid": "stu_1792863476988_fcac93",
+              "studentId": "USN-119",
+              "displayName": "Contestant 19",
+              "submittedAt": 1792863477036,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 109
+            },
+            {
+              "uid": "stu_1",
+              "studentId": "1MS21CS042",
+              "displayName": "Alex Turner",
+              "submittedAt": 1792863477042,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 115
+            }
+          ]
+        }
+      },
+      "participants": {}
+    },
+    "ses_1792863774785": {
+      "sessionId": "ses_1792863774785",
+      "title": "Automated Concurrency Stress Test",
+      "sessionCode": "TEST99",
+      "status": "active",
+      "createdAt": "2026-10-24T17:42:54.785Z",
+      "createdBy": "admin_root_1",
+      "currentRoundId": "rnd_1792863774785_1",
+      "rounds": {
+        "rnd_1792863774785_1": {
+          "roundId": "rnd_1792863774785_1",
+          "roundNumber": 1,
+          "questionText": "Concurrency Test: What is 2 + 2?",
+          "status": "CLOSED",
+          "winnerUid": "stu_1792863774795_f8284c",
+          "winnerStudentId": "USN-101",
+          "winnerNameSnapshot": "Contestant 1",
+          "winnerAcceptedAt": 1792863774869,
+          "winnerLatencyMs": 78,
+          "roundOpenedAt": 1792863774791,
+          "roundClosedAt": 1792863774909,
+          "attempts": [
+            {
+              "uid": "stu_1792863774795_f8284c",
+              "studentId": "USN-101",
+              "displayName": "Contestant 1",
+              "submittedAt": 1792863774869,
+              "status": "ACCEPTED_WINNER",
+              "latencyMs": 78
+            },
+            {
+              "uid": "stu_1792863774801_57529a",
+              "studentId": "USN-102",
+              "displayName": "Contestant 2",
+              "submittedAt": 1792863774871,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 80
+            },
+            {
+              "uid": "stu_1792863774806_b08424",
+              "studentId": "USN-103",
+              "displayName": "Contestant 3",
+              "submittedAt": 1792863774872,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 81
+            },
+            {
+              "uid": "stu_1792863774822_a3106e",
+              "studentId": "USN-108",
+              "displayName": "Contestant 8",
+              "submittedAt": 1792863774874,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 83
+            },
+            {
+              "uid": "stu_1792863774825_2485ea",
+              "studentId": "USN-109",
+              "displayName": "Contestant 9",
+              "submittedAt": 1792863774875,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 84
+            },
+            {
+              "uid": "stu_1792863774831_13afcc",
+              "studentId": "USN-111",
+              "displayName": "Contestant 11",
+              "submittedAt": 1792863774877,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 86
+            },
+            {
+              "uid": "stu_1792863774810_ab0784",
+              "studentId": "USN-104",
+              "displayName": "Contestant 4",
+              "submittedAt": 1792863774878,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 87
+            },
+            {
+              "uid": "stu_1792863774814_8d6302",
+              "studentId": "USN-105",
+              "displayName": "Contestant 5",
+              "submittedAt": 1792863774880,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 89
+            },
+            {
+              "uid": "stu_1792863774828_374e7a",
+              "studentId": "USN-110",
+              "displayName": "Contestant 10",
+              "submittedAt": 1792863774882,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 91
+            },
+            {
+              "uid": "stu_1792863774834_ecb375",
+              "studentId": "USN-112",
+              "displayName": "Contestant 12",
+              "submittedAt": 1792863774883,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 92
+            },
+            {
+              "uid": "stu_1792863774836_57a583",
+              "studentId": "USN-113",
+              "displayName": "Contestant 13",
+              "submittedAt": 1792863774885,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 94
+            },
+            {
+              "uid": "stu_1792863774817_8f4b86",
+              "studentId": "USN-106",
+              "displayName": "Contestant 6",
+              "submittedAt": 1792863774886,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 95
+            },
+            {
+              "uid": "stu_1792863774820_c8953c",
+              "studentId": "USN-107",
+              "displayName": "Contestant 7",
+              "submittedAt": 1792863774888,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 97
+            },
+            {
+              "uid": "stu_1792863774844_6940ac",
+              "studentId": "USN-116",
+              "displayName": "Contestant 16",
+              "submittedAt": 1792863774893,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 102
+            },
+            {
+              "uid": "stu_1792863774850_2cc441",
+              "studentId": "USN-118",
+              "displayName": "Contestant 18",
+              "submittedAt": 1792863774895,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 104
+            },
+            {
+              "uid": "stu_1792863774855_80ea2e",
+              "studentId": "USN-120",
+              "displayName": "Contestant 20",
+              "submittedAt": 1792863774896,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 105
+            },
+            {
+              "uid": "stu_1792863774841_7a85be",
+              "studentId": "USN-115",
+              "displayName": "Contestant 15",
+              "submittedAt": 1792863774898,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 107
+            },
+            {
+              "uid": "stu_1792863774847_8ce610",
+              "studentId": "USN-117",
+              "displayName": "Contestant 17",
+              "submittedAt": 1792863774900,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 109
+            },
+            {
+              "uid": "stu_1792863774839_2606cc",
+              "studentId": "USN-114",
+              "displayName": "Contestant 14",
+              "submittedAt": 1792863774901,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 110
+            },
+            {
+              "uid": "stu_1792863774852_3c6f98",
+              "studentId": "USN-119",
+              "displayName": "Contestant 19",
+              "submittedAt": 1792863774903,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 112
+            },
+            {
+              "uid": "stu_1",
+              "studentId": "1MS21CS042",
+              "displayName": "Alex Turner",
+              "submittedAt": 1792863774911,
+              "status": "REJECTED_TOO_LATE",
+              "latencyMs": 120
+            }
+          ]
+        }
+      },
+      "participants": {}
+    }
+  },
+  "authTokens": {
+    "1871e4a1cc16a7579e48077b48950f514097dd662944493959784254440ad18b": "admin_root_1",
+    "0d5e201fd4a1bcd9748bd96e34344bd1ffa8eea39796e539ecb36ddd3478e9b9": "stu_1",
+    "8c76c3d9d221d6d365921569267665df3b53b281bb8f4bc3e9323693b8cf6df1": "stu_2",
+    "5f4c434fa842cde77a3889cceca857a278f2674e7cfd63db3dbd8c2da804dbc8": "stu_3",
+    "c63930bc9d72bce6e5194f46a29171d01dd5d750cd594f60e9fca7aafd11803b": "stu_1792862376376_5ad02b",
+    "86856d08f1128c2130ff61093433b888e297e022adb651c9f48149d353b8e661": "stu_1792862376483_dc75f6",
+    "3d7aa1122083e8bcc5b4e5a4fc57aa6078206067ca646da0addc7e0495507ae6": "stu_1792862376583_c1d9b6",
+    "b50b93d482e86c18e8d656fea466484bdeb72424b71dbbd05654e0a3bfc0cf33": "stu_1792862376688_b97ebb",
+    "0728e303227741feb485fee66960da7c7ac7e1b21bc655fa12c9715fbf10525f": "stu_1792862376788_3f287a",
+    "7e8cd202f9219b57f0330e4661d040506d7588519278a01c54388398f8a71275": "stu_1792862376886_e55008",
+    "c6fef8286b273cce07ecf925be61b7355974f8a3d03249fb15a915caa1e1ed99": "stu_1792862376982_d7915c",
+    "09ff01118416020fa4c6c1bcd153d2083478f1d0eca7aa89f08b10e21460156e": "stu_1792862377083_d616d7",
+    "a2ad1938d769346880fe66b3fa7a5cdbf4defb1611b5c83f5a960dea704542c0": "stu_1792862377188_57d0e3",
+    "a2a7dd388109b4fed987af3564cfe1468b563996ae2feac64b71a14cfe058ceb": "stu_1792862377295_d8ba36",
+    "b14c3fde5f283e262fc566d080cf89d4ef7bd5bcf0fa1cad7ce24213f6139476": "stu_1792862377395_50dd29",
+    "ec2419511e01c7ac92fa3ab3ffdb03261f10be7f30dd139eb465355a3f8dd074": "stu_1792862377494_35249f",
+    "9d907d42873ab1d4de1058fe42100d054d9cc74756ee32a030c7aee92ca506e2": "stu_1792862377598_62139d",
+    "8aaeda21f577e37669a49f400f30aaf1c50e8804206e3ac15948fa900612be64": "stu_1792862377695_030d93",
+    "81a02f8331072b7c95128111120b711c84a49916db9a3bc947e3305688d89e08": "stu_1792862377795_351d89",
+    "6d164e39773f89860ead8db32d610c64f30ecaf73dc922756e8c6775f9928841": "stu_1792862377892_8dde62",
+    "2b32b7a81c74364816865fae1b410f7d2b26aa4a9d6b741032e1a6ec3a49c1c5": "stu_1792862378002_0a7b05",
+    "a1112a9d26364b66cdbe1c951f36bca72de8f7ff9d0af63fab990a248d143ac5": "admin_root_1",
+    "82455ad67ac4f686dd631b235325d3407e05316ff1a2236d2c97b7abd273f3e1": "stu_1",
+    "de66754cf374d56d834245353c0531e35c55f9e1ae144ebf10ca533f23b4041a": "stu_2",
+    "bbab4c50ef20df2dd880035460b2eef5f4ba95ce4d758b797b42713cc287f185": "stu_3",
+    "23e541c216f3f99624ea3d2e71d4851714396ca1519dcec51b5c868100ce3cb4": "stu_1792862376376_5ad02b",
+    "d29f13e6be45b988eef727f84f3120f95f885b12bc8cdfe2d2923db9b0fa2ead": "stu_1792862376483_dc75f6",
+    "cd9cf314c0bfe0dc3c4ec485758ff80121f17f723012d57bff93a49249247a7e": "stu_1792862376583_c1d9b6",
+    "42221af4d026733eec60626279e3db7d6e88d67b6ffd25257e894b7f08fbd0af": "stu_1792862376688_b97ebb",
+    "ca6e37b3c692188f82c94fcda8d5b4353e9f7994e0f03abc5fd1409699b835f3": "stu_1792862376788_3f287a",
+    "b4dbe5a17324f6f15874944da852abbff1eef9f159b59d45536da82f40a07b70": "stu_1792862376886_e55008",
+    "22ee324a4023871c7455526936006dab76d0eb8986a28be6b3e701a29b4f5cdf": "stu_1792862376982_d7915c",
+    "31f0262270ef25a7a7f589fb9db8d2d61245825b2353e417c5d62e81e0c9cd17": "stu_1792862377083_d616d7",
+    "6506a6fec7702ace890e7226e49a827c5ed82d656aee40cf06f85cfeaaf6ee4c": "stu_1792862377188_57d0e3",
+    "3f2b15a4549986394e349adc34c36d7e3f2a02c3e45c0e8e0adaebeca491d858": "stu_1792862377295_d8ba36",
+    "4192bb88a4dd128790279c6948802990d57f30e920b7d92f6b5a7f0ff8c551c5": "stu_1792862377395_50dd29",
+    "48b25609826ad7d4d8f032f1177880f4921dabc7c9363e8a157f16e06b9f6316": "stu_1792862377494_35249f",
+    "6962e12decc299f57f51d6777067d2279f211c523c2d4dad8dc4758b25935769": "stu_1792862377598_62139d",
+    "e8175540b8f07bc16a98f44629764a415f415eeccd5f138de74761f18bff5f2a": "stu_1792862377695_030d93",
+    "21bd453fb6e61e7296ba8e7ef8a52702e507a0e5d214712b9d273fd2c4444bec": "stu_1792862377795_351d89",
+    "5c5900f28444458145f5976a46ef7c09b3727ad04b877abc5a22d3c64c1c72d8": "stu_1792862377892_8dde62",
+    "bca7ea98bf66b2435cfb84335a58517b55a0f3a5d452846342d9d24fd2dec7b7": "stu_1792862378002_0a7b05",
+    "4b60931c41779f9e19c08c3ae224b7c9f638c088f98417d48c5a6aa1f28b2267": "stu_1",
+    "1f75725ab8e301b5bc71f6ec5d9ad81511d33eb39417c0fd65299bbe93e95422": "stu_1",
+    "4a864bfb2e308fad4b7982a5a4ee5ed59d48374d5b8bf2862281bba7c5772bb1": "admin_root_1",
+    "59eb30d01100581e592d6a4ac5b971c6af55b3d36a36dbdcda49047afd38ca2f": "stu_1",
+    "99335c203f62b8472fba279b7629380ff0169981057d6218e9e5958c98d51725": "stu_2",
+    "6ae8a14548d6b71f21974a6f3c5fd075313bf440b4a3433113ea3f180e3fd0d7": "stu_3",
+    "61f510a4a2e45b3ebbb9c076680e12fc74d93442938398784c99a4f605fb1dd0": "stu_1792863476931_a5ad75",
+    "649a085c7d083713d20e47060a9cdacdfe2dc5f661d684a5f1e1e10ff7aac1d7": "stu_1792863476941_487567",
+    "0124acd052e1db6bf8f441925904da1506e85689d569994ae7b4131a5752241b": "stu_1792863476947_f724da",
+    "4ac3629511750208c7f5bb97c8a9db1161c2ef164a9fdb385be16c3371148660": "stu_1792863476951_496211",
+    "205d892be5b9166cbe915db0eea51ca43c96fbb64bda6f385b267b62abc54846": "stu_1792863476954_c73fa5",
+    "49fc1e9814d54883e8e6aa1c753e4918e21816cba78d57a162ac1dad973dbd7c": "stu_1792863476957_734c2d",
+    "d4f380cbe3269ca6e706e51c573ffd1160fe36041414296e892a67aa98af052b": "stu_1792863476960_fad130",
+    "12300c3f66c5ab7a2e3e1d45ed8baf93e1157c4dc3ecb872a943262864713a1c": "stu_1792863476962_5658d9",
+    "7c868923b11fe6ab8d5fc0ea95495541ecb2fc9d09e957db30e2269c63930e40": "stu_1792863476965_ac4a95",
+    "f6daba0ae64e445adb4cf1ba522398922065bbe685e45b3da7a21a54be06541a": "stu_1792863476967_d0ce84",
+    "a23f798bbf3980adfc9475d6ffc5017b8db2cf785f708be0b294b2ffb30944dc": "stu_1792863476970_fed95f",
+    "e5ca2143e44d898945f887c10547d91c6932d5a2580899b02b95140246df84f4": "stu_1792863476972_7c169d",
+    "b21e4acdb3e7eaa999badfdbbcc84908152e7c3e7dafa63885f006d07df72ca1": "stu_1792863476974_4e2ca2",
+    "ffa67ee683a67a76024815d3049c30dc18d49548d6c43212868e3a98f0d7c875": "stu_1792863476976_a2ed87",
+    "35f61652ea4bae6096200739edebd4f74d9dba364f9dfd6b55039d2b3a802c64": "stu_1792863476978_da92d6",
+    "4dc38433f0136393be0af55f5ee17995aae93325f0610f38c7063a2f37a313d0": "stu_1792863476980_de3972",
+    "1a8af87c4a65a60749d42f9662acd4d11249225b9862332fe685739290b2b11f": "stu_1792863476983_46b4bb",
+    "afb9ff754f07a81439038769fca3e7974d47af2f7bd822d24b43341769cd2247": "stu_1792863476986_e2b871",
+    "001c449cede4e637744760e07fc7d0dd9538fb0f12723c62b28ea7ce574b99de": "stu_1792863476988_fcac93",
+    "54e6a236f8654ade63dfb2eae3a3c4e712d17db56bbca0e10383801939a65795": "stu_1792863476990_9c223a",
+    "f00c378731745f948cf1a9e4465aa91cfd510732fae6ebeef54643e8a3665bf9": "admin_root_1",
+    "099f0fb4878be0cdda897c138e092d53f0cde3d6775f6c5f9503a69504676c51": "stu_1",
+    "9716a471cdd2a39267b8f17ea1c23b6db4315ace21c1eb3c3f76f12ce8bf631e": "stu_2",
+    "1f7ae0d24ac9e85fafc557503e47df258fcc0c47c9a8e2f379bf793e9c04b120": "stu_3",
+    "4547555cebb71f6cd7c5610dd5eb24879de4e8e4866bb4e44aae2ef57622861a": "stu_1792863774795_f8284c",
+    "810dbc68c51e8543e7b315f0cb07a76fe171103b580e3875394a754408f0dae5": "stu_1792863774801_57529a",
+    "4318d4a55f5bbde673c1f706cbcbfa9e6e1ce7a80e90b7e231ddcee72b075cee": "stu_1792863774806_b08424",
+    "69a98df6463294a1dac2ad2bfa39895386440cc87f283447bc99a8f5392761c6": "stu_1792863774810_ab0784",
+    "a0f7141d845ef14e1f9efcc16506578d6315ad0f32e88dfd013d017544da206f": "stu_1792863774814_8d6302",
+    "d98a46966e4f4b886fc1caf56bc058d6d1c916b2b476c64dac646e8a858a4b86": "stu_1792863774817_8f4b86",
+    "ee08d13f7aedb93d84a16b7cbc3ca96424b461e52173d4ac8801cff850acdb48": "stu_1792863774820_c8953c",
+    "eca9bcd37ad6db16a7bc562829e564f13502da48d6cade12858b679293729b5d": "stu_1792863774822_a3106e",
+    "40472af6b00c7ee4a0ecd445440b7a3c97a4612d3faa75f86b9b1daded861c3f": "stu_1792863774825_2485ea",
+    "ad3098f2de27a63fdc99dad09f82219b0e1d1040f9aa90c452dd1008652fd455": "stu_1792863774828_374e7a",
+    "e2c8e6dad9c64263d33abe8971f2da7044711c13ee9f542e1f0a1abc03405bfc": "stu_1792863774831_13afcc",
+    "b465ac62548bc30d0f2e3a3e896ea87a67f50ae77b88efb5a1dd9a31ace53592": "stu_1792863774834_ecb375",
+    "b824ae8a1f8cc69c8767134557d4d8080394855520849e060d260fc52e4b0c82": "stu_1792863774836_57a583",
+    "8c3b5e860a40de6327a416c7552d328471521ee19477b813963f5f46f4c7ba42": "stu_1792863774839_2606cc",
+    "036cd59cde7f9305ff263582ea220cf344ae5a142c9a5cc2d6f8a59fface74bb": "stu_1792863774841_7a85be",
+    "6345c1ba19925d69c359614de41af06dc9cad2f6d01c4145f251f8b028166f22": "stu_1792863774844_6940ac",
+    "474a1f0d961eb9e38f2d888c2a5f5a37fa6f920fe87679c1f859e5215b15a536": "stu_1792863774847_8ce610",
+    "03b42218fde99e3851bcd94ca61fdaa007344a84914701096a05039956efbc3a": "stu_1792863774850_2cc441",
+    "1e43f4685c5c2c6a5963e9df1c59832501064d47c8ff3694571e888012d42379": "stu_1792863774852_3c6f98",
+    "db834c0dfb4375f6fc461f6a9ddaa636293360bd0a571899966ca9b7a5c4a82a": "stu_1792863774855_80ea2e",
+    "b37f5fa9bee586e0d76d9dfb2a18b0e6fa1fe867cb67cf75598b4d4a2c86c8f2": "admin_root_1"
+  }
+}
