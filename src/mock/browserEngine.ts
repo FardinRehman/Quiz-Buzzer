@@ -175,19 +175,12 @@ class MockEventSource extends EventTarget {
 }
 
 export function initBrowserEngine() {
-  const isGithubPages = typeof window !== 'undefined' && (
-    window.location.hostname.includes('github.io') ||
-    window.location.hostname.includes('localhost') === false ||
-    window.location.search.includes('mock=true')
-  );
-
-  // If we are running in full-stack local server mode with active server.ts on port 3000,
-  // do not mock unless explicitly requested via ?mock=true
-  if (typeof window !== 'undefined' && window.location.port === '3000' && !window.location.search.includes('mock=true')) {
+  // Only enable mock engine if explicitly requested via ?mock=true
+  if (typeof window === 'undefined' || !window.location.search.includes('mock=true')) {
     return;
   }
 
-  console.log('⚡ QuickBuzz: Running in Standalone In-Browser Real-Time Mode (GitHub Pages compatible)');
+  console.log('⚡ QuickBuzz: Running in Standalone In-Browser Real-Time Mode (?mock=true)');
 
   // Polyfill EventSource for /api/live/stream
   const OriginalEventSource = window.EventSource;

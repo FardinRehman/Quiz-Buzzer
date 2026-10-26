@@ -25,14 +25,14 @@
           "roundId": "rnd_q1",
           "roundNumber": 1,
           "questionText": "Which computer scientist is widely considered the father of theoretical computer science and artificial intelligence?",
-          "status": "IDLE",
+          "status": "CLOSED",
           "winnerUid": null,
           "winnerStudentId": null,
           "winnerNameSnapshot": null,
           "winnerAcceptedAt": null,
           "winnerLatencyMs": null,
-          "roundOpenedAt": null,
-          "roundClosedAt": null,
+          "roundOpenedAt": 1793010868204,
+          "roundClosedAt": 1793010872575,
           "attempts": []
         }
       },
@@ -65,5 +65,8 @@
       "participants": {}
     }
   },
-  "authTokens": {}
+  "authTokens": {
+    "f0bcf688e740393eae1aa82f7d7341bf70074be2a734712561e75ff2fea262fb": "admin_root_1",
+    "a152c8f155e39794f8ffd87720e3b6a1af7d06bb07855f671fc03ed9e877571f": "admin_root_1"
+  }
 }

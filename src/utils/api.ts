@@ -1,9 +1,14 @@
 /**
  * QuickBuzz API Base URL Resolver
- * Allows seamless switching between relative URLs (local dev or reverse proxy)
- * and external backend URLs (when frontend is deployed to Vercel and backend to Render/Railway).
+ * Connects to live Render backend when hosted on GitHub Pages or Vercel,
+ * and uses relative paths when running directly on Render or localhost.
  */
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const isGithubPages = typeof window !== 'undefined' && window.location.hostname.includes('github.io');
+
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  (isGithubPages ? 'https://quiz-buzzer-z8hm.onrender.com' : '')
+).replace(/\/$/, '');
 
 export function apiUrl(path: string): string {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
