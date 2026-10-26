@@ -21,56 +21,6 @@ function getInitialMockDb(): DatabaseSchema {
       createdAt: new Date().toISOString(),
       passwordHash: 'Fardin@RIT07',
     },
-    'stu_1': {
-      uid: 'stu_1',
-      email: 'alex.turner@campus.edu',
-      displayName: 'Alex Turner',
-      studentId: '1MS21CS042',
-      role: 'student',
-      accountStatus: 'active',
-      createdAt: new Date().toISOString(),
-      passwordHash: 'password123',
-    },
-    'stu_2': {
-      uid: 'stu_2',
-      email: 'priya.sharma@campus.edu',
-      displayName: 'Priya Sharma',
-      studentId: '1MS21CS088',
-      role: 'student',
-      accountStatus: 'active',
-      createdAt: new Date().toISOString(),
-      passwordHash: 'password123',
-    },
-    'stu_3': {
-      uid: 'stu_3',
-      email: 'david.chen@campus.edu',
-      displayName: 'David Chen',
-      studentId: '1MS21CS019',
-      role: 'student',
-      accountStatus: 'active',
-      createdAt: new Date().toISOString(),
-      passwordHash: 'password123',
-    },
-    'stu_4': {
-      uid: 'stu_4',
-      email: 'fatima.zahra@campus.edu',
-      displayName: 'Fatima Zahra',
-      studentId: '1MS21CS034',
-      role: 'student',
-      accountStatus: 'active',
-      createdAt: new Date().toISOString(),
-      passwordHash: 'password123',
-    },
-    'stu_5': {
-      uid: 'stu_5',
-      email: 'marcus.vance@campus.edu',
-      displayName: 'Marcus Vance',
-      studentId: '1MS21CS105',
-      role: 'student',
-      accountStatus: 'disabled',
-      createdAt: new Date().toISOString(),
-      passwordHash: 'password123',
-    },
   };
 
   const initialSessionId = 'ses_main_2026';
@@ -101,24 +51,7 @@ function getInitialMockDb(): DatabaseSchema {
           attempts: [],
         },
       },
-      participants: {
-        'stu_1': {
-          uid: 'stu_1',
-          displayName: 'Alex Turner',
-          studentId: '1MS21CS042',
-          joinedAt: new Date().toISOString(),
-          lastSeen: Date.now(),
-          isConnected: true,
-        },
-        'stu_2': {
-          uid: 'stu_2',
-          displayName: 'Priya Sharma',
-          studentId: '1MS21CS088',
-          joinedAt: new Date().toISOString(),
-          lastSeen: Date.now(),
-          isConnected: true,
-        },
-      },
+      participants: {},
     },
   };
 
@@ -127,8 +60,6 @@ function getInitialMockDb(): DatabaseSchema {
     sessions: initialSessions,
     authTokens: {
       'mock_token_admin': adminUid,
-      'mock_token_stu_1': 'stu_1',
-      'mock_token_stu_2': 'stu_2',
     },
   };
 }
@@ -444,7 +375,7 @@ export function initBrowserEngine() {
           accepted: true,
           reason: 'WINNER',
           latencyMs: latency,
-          winner: { name: displayName, studentId, latencyMs },
+          winner: { name: displayName, studentId, latencyMs: latency },
         };
         return jsonResponse(resp);
       } else {
@@ -465,7 +396,7 @@ export function initBrowserEngine() {
         const resp: BuzzResponse = {
           accepted: false,
           reason: 'TOO_LATE',
-          latencyMs,
+          latencyMs: latency,
           winner: round.winnerNameSnapshot
             ? {
                 name: round.winnerNameSnapshot,

@@ -19,8 +19,25 @@ async function runTests() {
   const adminToken = adminData.token;
   console.log('  ✔ Admin authenticated successfully with role: admin');
 
-  // Test 2: Student Authentication
-  console.log('\n▶ Test 2: Authenticate Student Accounts (Alex, Priya, David)');
+  // Test 2: Provision & Authenticate Student Accounts
+  console.log('\n▶ Test 2: Provision & Authenticate Test Student Accounts');
+  // Admin creates test accounts dynamically
+  await fetch(`${BASE_URL}/api/admin/students`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+    body: JSON.stringify({ displayName: 'Test Contestant 1', studentId: '1MS21CS042', email: 'alex.turner@campus.edu', password: 'password123' }),
+  });
+  await fetch(`${BASE_URL}/api/admin/students`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+    body: JSON.stringify({ displayName: 'Test Contestant 2', studentId: '1MS21CS088', email: 'priya.sharma@campus.edu', password: 'password123' }),
+  });
+  await fetch(`${BASE_URL}/api/admin/students`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+    body: JSON.stringify({ displayName: 'Test Contestant 3', studentId: '1MS21CS019', email: 'david.chen@campus.edu', password: 'password123' }),
+  });
+
   const stu1Res = await fetch(`${BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -48,10 +65,25 @@ async function runTests() {
   assert.strictEqual(stu3Res.status, 200, 'Student 3 login failed');
   const stu3Data = await stu3Res.json();
   const stu3Token = stu3Data.token;
-  console.log('  ✔ 3 Contestant accounts logged in successfully');
+  console.log('  ✔ 3 Test Contestant accounts provisioned and logged in successfully');
 
   // Test 3: Disabled Student Account Enforcement
-  console.log('\n▶ Test 3: Disabled Account Security Check (Marcus Vance)');
+  console.log('\n▶ Test 3: Disabled Account Security Check');
+  const disabledCreated = await fetch(`${BASE_URL}/api/admin/students`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+    body: JSON.stringify({ displayName: 'Disabled Student', studentId: '1MS21CS105', email: 'marcus.vance@campus.edu', password: 'password123' }),
+  });
+  const disabledStudentData = await disabledCreated.json();
+  const disabledUid = disabledStudentData.student?.uid;
+  if (disabledUid) {
+    await fetch(`${BASE_URL}/api/admin/students/${disabledUid}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ accountStatus: 'disabled' }),
+    });
+  }
+
   const disabledRes = await fetch(`${BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

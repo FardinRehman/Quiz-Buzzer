@@ -157,11 +157,36 @@ firebase deploy --only hosting
 
 ---
 
-## 6. Testing Multiple Devices Simultaneously
+## 6. Live Deployment: Vercel (Frontend) + Render (Backend)
+
+Because QuickBuzz relies on long-lived Server-Sent Events (SSE) and in-memory atomic locks for millisecond race resolution, the recommended production setup separates the stateless frontend (on Vercel's global CDN) and the stateful real-time backend (on Render/Railway/Fly.io):
+
+### Step 1: Deploy Backend to Render (Free)
+1. Push your repository to GitHub.
+2. Sign in to [Render](https://render.com) and click **New +** -> **Web Service**.
+3. Select your GitHub repository.
+4. Render will automatically detect [`render.yaml`](file:///c:/Users/fardi/Desktop/quickbuzz---real-time-fastest-finger-first-platform/render.yaml) or you can configure:
+   - **Environment**: Node
+   - **Build Command**: `npm install --legacy-peer-deps && npm run build`
+   - **Start Command**: `npm start`
+5. Once deployed, copy your Render service URL (e.g. `https://quickbuzz-backend.onrender.com`).
+
+### Step 2: Deploy Frontend to Vercel
+1. Sign in to [Vercel](https://vercel.com) and click **Add New...** -> **Project**.
+2. Import your GitHub repository.
+3. Vercel will automatically detect Vite and [`vercel.json`](file:///c:/Users/fardi/Desktop/quickbuzz---real-time-fastest-finger-first-platform/vercel.json).
+4. Under **Environment Variables**, add:
+   - **Key**: `VITE_API_BASE_URL`
+   - **Value**: `https://your-render-service.onrender.com` (your backend URL from Step 1)
+5. Click **Deploy**!
+
+---
+
+## 7. Testing Multiple Devices Simultaneously
 
 To test QuickBuzz with real phones and laptops in the same room or WiFi:
 1. Find your computer's local IP address (`ipconfig` or `ifconfig`), e.g., `192.168.1.45`.
 2. Open `http://192.168.1.45:3000` on your phone browser.
-3. Log in as **Alex Turner** (`1MS21CS042` / `password123`).
-4. On your laptop, log in as **Quizmaster Admin** (`admin@quickbuzz.live` / `admin123`).
-5. Open a round from the laptop, and watch the buzzer unlock instantly on the phone screen!
+3. Enter your Name and Session PIN (e.g. `BUZZ99`) to join as a contestant.
+4. On your laptop, log in as **Quizmaster Admin** (`fardinrit@gmail.com` / `Fardin@RIT07`).
+5. Open a round from the laptop host dashboard, and watch the phone buzzer unlock and activate instantly!

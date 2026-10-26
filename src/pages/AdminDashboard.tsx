@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext.js';
 import { useLiveSession } from '../hooks/useLiveSession.js';
 import { sound } from '../utils/audio.js';
+import { apiUrl } from '../utils/api.js';
 import {
   Zap,
   Radio,
@@ -128,7 +129,7 @@ export const AdminDashboard: React.FC = () => {
   const fetchStudents = async () => {
     if (!token) return;
     try {
-      const res = await fetch('/api/admin/students', {
+      const res = await fetch(apiUrl('/api/admin/students'), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -144,7 +145,7 @@ export const AdminDashboard: React.FC = () => {
   const fetchSessions = async () => {
     if (!token) return;
     try {
-      const res = await fetch('/api/admin/sessions', {
+      const res = await fetch(apiUrl('/api/admin/sessions'), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -184,7 +185,7 @@ export const AdminDashboard: React.FC = () => {
     e.preventDefault();
     if (!token) return;
     try {
-      const res = await fetch('/api/admin/students', {
+      const res = await fetch(apiUrl('/api/admin/students'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -209,7 +210,7 @@ export const AdminDashboard: React.FC = () => {
     if (!token) return;
     const nextStatus = student.accountStatus === 'active' ? 'disabled' : 'active';
     try {
-      const res = await fetch(`/api/admin/students/${student.uid}`, {
+      const res = await fetch(apiUrl(`/api/admin/students/${student.uid}`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -229,7 +230,7 @@ export const AdminDashboard: React.FC = () => {
     e.preventDefault();
     if (!token || !selectedStudentForPass) return;
     try {
-      const res = await fetch(`/api/admin/students/${selectedStudentForPass.uid}/reset-password`, {
+      const res = await fetch(apiUrl(`/api/admin/students/${selectedStudentForPass.uid}/reset-password`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -255,7 +256,7 @@ export const AdminDashboard: React.FC = () => {
     e.preventDefault();
     if (!token || !csvInput.trim()) return;
     try {
-      const res = await fetch('/api/admin/students/import-csv', {
+      const res = await fetch(apiUrl('/api/admin/students/import-csv'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -284,7 +285,7 @@ export const AdminDashboard: React.FC = () => {
     e.preventDefault();
     if (!token || !newSessionTitle.trim()) return;
     try {
-      const res = await fetch('/api/admin/sessions', {
+      const res = await fetch(apiUrl('/api/admin/sessions'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -312,7 +313,7 @@ export const AdminDashboard: React.FC = () => {
 
   const handleExportCsv = () => {
     if (!activeSessionId) return;
-    window.location.href = `/api/admin/reports/${activeSessionId}/export-csv?token=${encodeURIComponent(token || '')}`;
+    window.location.href = apiUrl(`/api/admin/reports/${activeSessionId}/export-csv?token=${encodeURIComponent(token || '')}`);
   };
 
   // Filtered student list

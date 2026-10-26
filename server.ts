@@ -19,6 +19,18 @@ const DB_FILE = path.join(DATA_DIR, 'quickbuzz-db.json');
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Enable CORS for Vercel and cross-origin frontend clients
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+    return;
+  }
+  next();
+});
+
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -41,7 +53,6 @@ function generateToken(): string {
 
 function getInitialDatabase(): DatabaseSchema {
   const adminSalt = crypto.randomBytes(16).toString('hex');
-  const studentSalt = crypto.randomBytes(16).toString('hex');
 
   const adminUid = 'admin_root_1';
   const initialUsers: DatabaseSchema['users'] = {
@@ -54,61 +65,6 @@ function getInitialDatabase(): DatabaseSchema {
       createdAt: new Date().toISOString(),
       salt: adminSalt,
       passwordHash: hashPassword('Fardin@RIT07', adminSalt),
-    },
-    'stu_1': {
-      uid: 'stu_1',
-      email: 'alex.turner@campus.edu',
-      displayName: 'Alex Turner',
-      studentId: '1MS21CS042',
-      role: 'student',
-      accountStatus: 'active',
-      createdAt: new Date().toISOString(),
-      salt: studentSalt,
-      passwordHash: hashPassword('password123', studentSalt),
-    },
-    'stu_2': {
-      uid: 'stu_2',
-      email: 'priya.sharma@campus.edu',
-      displayName: 'Priya Sharma',
-      studentId: '1MS21CS088',
-      role: 'student',
-      accountStatus: 'active',
-      createdAt: new Date().toISOString(),
-      salt: studentSalt,
-      passwordHash: hashPassword('password123', studentSalt),
-    },
-    'stu_3': {
-      uid: 'stu_3',
-      email: 'david.chen@campus.edu',
-      displayName: 'David Chen',
-      studentId: '1MS21CS019',
-      role: 'student',
-      accountStatus: 'active',
-      createdAt: new Date().toISOString(),
-      salt: studentSalt,
-      passwordHash: hashPassword('password123', studentSalt),
-    },
-    'stu_4': {
-      uid: 'stu_4',
-      email: 'fatima.zahra@campus.edu',
-      displayName: 'Fatima Zahra',
-      studentId: '1MS21CS034',
-      role: 'student',
-      accountStatus: 'active',
-      createdAt: new Date().toISOString(),
-      salt: studentSalt,
-      passwordHash: hashPassword('password123', studentSalt),
-    },
-    'stu_5': {
-      uid: 'stu_5',
-      email: 'marcus.vance@campus.edu',
-      displayName: 'Marcus Vance',
-      studentId: '1MS21CS105',
-      role: 'student',
-      accountStatus: 'disabled', // Example disabled account for edge case testing
-      createdAt: new Date().toISOString(),
-      salt: studentSalt,
-      passwordHash: hashPassword('password123', studentSalt),
     },
   };
 
@@ -140,24 +96,7 @@ function getInitialDatabase(): DatabaseSchema {
           attempts: [],
         },
       },
-      participants: {
-        'stu_1': {
-          uid: 'stu_1',
-          displayName: 'Alex Turner',
-          studentId: '1MS21CS042',
-          joinedAt: new Date().toISOString(),
-          lastSeen: Date.now(),
-          isConnected: true,
-        },
-        'stu_2': {
-          uid: 'stu_2',
-          displayName: 'Priya Sharma',
-          studentId: '1MS21CS088',
-          joinedAt: new Date().toISOString(),
-          lastSeen: Date.now(),
-          isConnected: true,
-        },
-      },
+      participants: {},
     },
   };
 

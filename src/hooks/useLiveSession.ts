@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { QuizSession, Round, Participant, BuzzAttempt, BuzzResponse } from '../types/quiz.js';
 import { sound } from '../utils/audio.js';
 import confetti from 'canvas-confetti';
+import { apiUrl } from '../utils/api.js';
 
 interface UseLiveSessionProps {
   token: string | null;
@@ -51,7 +52,7 @@ export function useLiveSession({ token, sessionId, userRole, userId }: UseLiveSe
       eventSourceRef.current.close();
     }
 
-    const url = `/api/live/stream?token=${encodeURIComponent(token)}&sessionId=${encodeURIComponent(sessionId)}`;
+    const url = apiUrl(`/api/live/stream?token=${encodeURIComponent(token)}&sessionId=${encodeURIComponent(sessionId)}`);
     const es = new EventSource(url);
     eventSourceRef.current = es;
 
@@ -226,7 +227,7 @@ export function useLiveSession({ token, sessionId, userRole, userId }: UseLiveSe
     sound.playBuzzPress();
 
     try {
-      const res = await fetch(`/api/sessions/${sessionId}/rounds/${currentRound.roundId}/buzz`, {
+      const res = await fetch(apiUrl(`/api/sessions/${sessionId}/rounds/${currentRound.roundId}/buzz`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -270,7 +271,7 @@ export function useLiveSession({ token, sessionId, userRole, userId }: UseLiveSe
   const openRound = async (questionText?: string, roundNumber?: number) => {
     if (!token || !sessionId) return;
     try {
-      const res = await fetch(`/api/admin/sessions/${sessionId}/rounds/open`, {
+      const res = await fetch(apiUrl(`/api/admin/sessions/${sessionId}/rounds/open`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -292,7 +293,7 @@ export function useLiveSession({ token, sessionId, userRole, userId }: UseLiveSe
   const closeRound = async () => {
     if (!token || !sessionId || !currentRound) return;
     try {
-      await fetch(`/api/admin/sessions/${sessionId}/rounds/${currentRound.roundId}/close`, {
+      await fetch(apiUrl(`/api/admin/sessions/${sessionId}/rounds/${currentRound.roundId}/close`), {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -304,7 +305,7 @@ export function useLiveSession({ token, sessionId, userRole, userId }: UseLiveSe
   const nextRound = async (questionText?: string) => {
     if (!token || !sessionId) return;
     try {
-      await fetch(`/api/admin/sessions/${sessionId}/rounds/next`, {
+      await fetch(apiUrl(`/api/admin/sessions/${sessionId}/rounds/next`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

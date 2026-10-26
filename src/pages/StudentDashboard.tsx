@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext.js';
 import { useLiveSession } from '../hooks/useLiveSession.js';
 import { BuzzerButton } from '../components/BuzzerButton.js';
 import { sound } from '../utils/audio.js';
+import { apiUrl } from '../utils/api.js';
 import {
   Zap,
   LogOut,
@@ -57,7 +58,7 @@ export const StudentDashboard: React.FC = () => {
     if (!joinCodeInput.trim()) return;
 
     try {
-      const res = await fetch('/api/sessions/join', {
+      const res = await fetch(apiUrl('/api/sessions/join'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
