@@ -7,7 +7,7 @@ export const LoginPage: React.FC = () => {
 
   // Contestant Quick-Join Form
   const [studentName, setStudentName] = useState('');
-  const [sessionPin, setSessionPin] = useState('BUZZ99');
+  const [sessionPin, setSessionPin] = useState('');
   const [studentId, setStudentId] = useState('');
 
   // Host Admin Modal & Form
