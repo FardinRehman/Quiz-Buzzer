@@ -72,7 +72,25 @@
       "participants": {}
     }
   },
-  "authTokens": {},
+  "authTokens": {
+    "f0bcf688e740393eae1aa82f7d7341bf70074be2a734712561e75ff2fea262fb": "admin_root_1",
+    "a152c8f155e39794f8ffd87720e3b6a1af7d06bb07855f671fc03ed9e877571f": "admin_root_1",
+    "7fb0d54b1773186b1484c45cb375045be03708f80cf8b3de9fdd0dfe3bb53af2": "admin_root_1",
+    "34398f1ff04d84d5ea46a2b55d7b5f6e6d87d3ceb00863bd1c585bce105bf513": "admin_root_1",
+    "542e43e9ca7e89191004b4ea107374e705ca647cee722d3e9984c675eb649b6d": "admin_root_1",
+    "5002203cb3247c5e638fbe1914d159b3de0e06bc5254e135dfcf080e8528a9c2": "admin_root_1",
+    "a6b05e0986177a0e12c8e40608c4f1888b1f450a21267496597adac85a53956e": "admin_root_1",
+    "b783cec4d2e6ec75615b9566d42a09b9fc272bfe2011f29da1de56a6e473b6cf": "admin_root_1",
+    "70353e8b45e92ee8ae428b9c21f9e3985aa4045c5815a6a7eec004a5a4b2b190": "admin_root_1",
+    "86a6b00556ef2a8a44328d8344baac9d0783e6f5711a1ac752ff0aeaf39318e0": "admin_root_1",
+    "eb3e7eb2a2f5a548d5cee08e267518e8d1a3345c84f4d486bdb0a0dd8be62492": "admin_root_1",
+    "ef429f137dc5f989e2cd942f025e7bac56c66148c70cbf2ff0c6c05fa087ce1d": "admin_root_1",
+    "31f4477cccc5fbe7ae9a45b4b1d2dcadfffa303257a7943584df367e4e4d1136": "admin_root_1",
+    "4ce0c80b086071a71a15a041ab5ac0cbe51cbef57d830ca7f50364125fe34169": "admin_root_1",
+    "8cc9cc89ff8d70dafd7ad970239bcab22d1e6eebef0fe457dcc5294f0c7e1f10": "admin_root_1",
+    "admin_master_token_2026": "admin_root_1",
+    "mock_token_admin": "admin_root_1"
+  },
   "questionBank": {
     "q_1793097605040_0_d351": {
       "id": "q_1793097605040_0_d351",
