@@ -129,6 +129,7 @@ export const AdminDashboard: React.FC = () => {
   const [isQuestionCsvLoading, setIsQuestionCsvLoading] = useState<boolean>(false);
   const [questionCsvError, setQuestionCsvError] = useState<string | null>(null);
   const [isConfirmClearBankOpen, setIsConfirmClearBankOpen] = useState<boolean>(false);
+  const [isClearingQuestionBank, setIsClearingQuestionBank] = useState<boolean>(false);
   const [isConfirmResetSequenceOpen, setIsConfirmResetSequenceOpen] = useState<boolean>(false);
   const [revealedAnswerIds, setRevealedAnswerIds] = useState<Record<string, boolean>>({});
 
@@ -329,17 +330,62 @@ export const AdminDashboard: React.FC = () => {
 
   // Clear question bank
   const handleClearQuestionBank = async () => {
+    setIsClearingQuestionBank(true);
     try {
-      const res = await fetch(apiUrl('/api/admin/questions/clear'), {
+      let res = await fetch(apiUrl('/api/admin/questions/clear'), {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token || ''}`,
+        },
       });
+
+      // If POST /clear is not ok, fallback to DELETE /api/admin/questions
+      if (!res.ok) {
+        res = await fetch(apiUrl('/api/admin/questions'), {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token || ''}`,
+          },
+        });
+      }
+
       if (res.ok) {
+        setQuestionBank([]);
+        setQuestionBankSummary({ total: 0, availableCount: 0, usedCount: 0 });
         setIsConfirmClearBankOpen(false);
         fetchQuestions();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to clear question bank');
+        setIsConfirmClearBankOpen(false);
       }
     } catch (err) {
       console.error('Failed to clear question bank:', err);
+      // Fallback try DELETE
+      try {
+        const delRes = await fetch(apiUrl('/api/admin/questions'), {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token || ''}`,
+          },
+        });
+        if (delRes.ok) {
+          setQuestionBank([]);
+          setQuestionBankSummary({ total: 0, availableCount: 0, usedCount: 0 });
+          setIsConfirmClearBankOpen(false);
+          fetchQuestions();
+          return;
+        }
+      } catch {
+        // ignore
+      }
+      alert('Network error while clearing question bank');
+      setIsConfirmClearBankOpen(false);
+    } finally {
+      setIsClearingQuestionBank(false);
     }
   };
 
@@ -348,15 +394,24 @@ export const AdminDashboard: React.FC = () => {
     try {
       const res = await fetch(apiUrl('/api/admin/questions/reset-sequence'), {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token || ''}`,
+        },
       });
       if (res.ok) {
         setIsConfirmResetSequenceOpen(false);
         fetchQuestions();
         alert('Question sequence reset! All questions are now eligible to be selected in random rounds again.');
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to reset question sequence');
+        setIsConfirmResetSequenceOpen(false);
       }
     } catch (err) {
       console.error('Failed to reset question sequence:', err);
+      alert('Network error while resetting question sequence');
+      setIsConfirmResetSequenceOpen(false);
     }
   };
 
@@ -2003,16 +2058,19 @@ export const AdminDashboard: React.FC = () => {
             </p>
             <div className="flex justify-center gap-3">
               <button
+                type="button"
                 onClick={() => setIsConfirmClearBankOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs text-slate-300 bg-slate-800"
+                className="px-4 py-2 rounded-xl text-xs text-slate-300 bg-slate-800 hover:bg-slate-700 cursor-pointer transition-colors"
               >
                 Cancel
               </button>
               <button
+                type="button"
+                disabled={isClearingQuestionBank}
                 onClick={handleClearQuestionBank}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500 disabled:opacity-50 cursor-pointer transition-colors shadow-lg shadow-red-600/20"
               >
-                Confirm Clear
+                {isClearingQuestionBank ? 'Clearing...' : 'Confirm Clear'}
               </button>
             </div>
           </div>

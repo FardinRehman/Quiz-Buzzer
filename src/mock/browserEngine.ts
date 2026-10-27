@@ -1,9 +1,10 @@
-import type { UserProfile, QuizSession, Round, BuzzAttempt, BuzzResponse } from '../types/quiz.js';
+import type { UserProfile, QuizSession, Round, BuzzAttempt, BuzzResponse, QuestionBankItem } from '../types/quiz.js';
 
 interface DatabaseSchema {
   users: Record<string, UserProfile & { passwordHash: string }>;
   sessions: Record<string, QuizSession>;
   authTokens: Record<string, string>;
+  questionBank: Record<string, QuestionBankItem>;
 }
 
 const STORAGE_KEY = 'quickbuzz_mock_db_v2';
@@ -63,13 +64,33 @@ function getInitialMockDb(): DatabaseSchema {
     authTokens: {
       'mock_token_admin': adminUid,
     },
+    questionBank: {
+      q_seed_1: {
+        id: 'q_seed_1',
+        question: 'Which computer scientist is widely considered the father of theoretical computer science and artificial intelligence?',
+        correctAnswer: 'Alan Turing',
+        importedAt: new Date().toISOString(),
+        usedInRoundId: null,
+      },
+      q_seed_2: {
+        id: 'q_seed_2',
+        question: 'What is the capital of Karnataka?',
+        correctAnswer: 'Bengaluru',
+        importedAt: new Date().toISOString(),
+        usedInRoundId: null,
+      },
+    },
   };
 }
 
 function loadDb(): DatabaseSchema {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (!parsed.questionBank) parsed.questionBank = {};
+      return parsed;
+    }
   } catch {
     // fallback
   }
@@ -693,6 +714,82 @@ export function initBrowserEngine() {
       });
     }
 
-    return jsonResponse({ error: 'Not found in mock engine' }, 404);
+    // 17b. Question Bank routes
+    if (pathname === '/api/admin/questions' && method === 'GET') {
+      const qList = Object.values(db.questionBank || {});
+      const availableCount = qList.filter(q => !q.usedInRoundId).length;
+      const usedCount = qList.filter(q => !!q.usedInRoundId).length;
+      return jsonResponse({
+        questions: qList,
+        total: qList.length,
+        availableCount,
+        usedCount,
+      });
+    }
+
+    if ((pathname === '/api/admin/questions/clear' && method === 'POST') ||
+        (pathname === '/api/admin/questions' && method === 'DELETE')) {
+      db.questionBank = {};
+      saveDb(db);
+      return jsonResponse({ success: true, message: 'Question bank cleared.' });
+    }
+
+    if (pathname === '/api/admin/questions/reset-sequence' && method === 'POST') {
+      if (db.questionBank) {
+        for (const q of Object.values(db.questionBank)) {
+          q.usedInRoundId = null;
+        }
+      }
+      saveDb(db);
+      const total = Object.keys(db.questionBank || {}).length;
+      return jsonResponse({ success: true, message: 'Question sequence reset.', availableCount: total });
+    }
+
+    const delQMatch = pathname.match(/\/api\/admin\/questions\/([^/]+)$/);
+    if (delQMatch && method === 'DELETE') {
+      const [, qId] = delQMatch;
+      if (db.questionBank && db.questionBank[qId]) {
+        delete db.questionBank[qId];
+        saveDb(db);
+      }
+      return jsonResponse({ success: true, remaining: Object.keys(db.questionBank || {}).length });
+    }
+
+    if (pathname === '/api/admin/questions/preview-csv' && method === 'POST') {
+      const { csvContent } = body;
+      const lines = (csvContent || '').split(/\r?\n/).filter((l: string) => l.trim().length > 0);
+      const count = Math.max(0, lines.length - 1);
+      return jsonResponse({ valid: true, totalDetected: count, errors: [] });
+    }
+
+    if (pathname === '/api/admin/questions/import-csv' && method === 'POST') {
+      const { csvContent } = body;
+      const lines = (csvContent || '').split(/\r?\n/).filter((l: string) => l.trim().length > 0);
+      let importedCount = 0;
+      if (!db.questionBank) db.questionBank = {};
+      for (let i = 1; i < lines.length; i++) {
+        const parts = lines[i].split(',');
+        if (parts.length >= 2) {
+          const qId = `q_mock_${Date.now()}_${i}`;
+          db.questionBank[qId] = {
+            id: qId,
+            question: parts[0].trim().replace(/^"|"$/g, ''),
+            correctAnswer: parts[1].trim().replace(/^"|"$/g, ''),
+            importedAt: new Date().toISOString(),
+            usedInRoundId: null,
+          };
+          importedCount++;
+        }
+      }
+      saveDb(db);
+      return jsonResponse({ success: true, importedCount }, 201);
+    }
+
+    // Default fallback: pass through unhandled requests to live backend/network!
+    try {
+      return await originalFetch(input, init);
+    } catch {
+      return jsonResponse({ error: 'Endpoint not found in mock engine and backend unreachable' }, 404);
+    }
   };
 }

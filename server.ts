@@ -1381,6 +1381,12 @@ app.post('/api/admin/questions/clear', authMiddleware, adminOnly, (_req, res) =>
   res.json({ success: true, message: 'Question bank cleared.' });
 });
 
+app.delete('/api/admin/questions', authMiddleware, adminOnly, (_req, res) => {
+  db.questionBank = {};
+  persistDb();
+  res.json({ success: true, message: 'Question bank cleared.' });
+});
+
 // Reset question sequence (marks all as unused without modifying student scores)
 app.post('/api/admin/questions/reset-sequence', authMiddleware, adminOnly, (_req, res) => {
   for (const q of Object.values(db.questionBank)) {
