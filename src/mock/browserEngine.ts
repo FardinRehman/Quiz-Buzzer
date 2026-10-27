@@ -6,7 +6,7 @@ interface DatabaseSchema {
   authTokens: Record<string, string>;
 }
 
-const STORAGE_KEY = 'quickbuzz_mock_db_v1';
+const STORAGE_KEY = 'quickbuzz_mock_db_v2';
 const CHANNEL_NAME = 'quickbuzz_mock_channel';
 
 function getInitialMockDb(): DatabaseSchema {
@@ -578,6 +578,50 @@ export function initBrowserEngine() {
       user.passwordHash = 'password123';
       saveDb(db);
       return jsonResponse({ success: true, temporaryPassword: 'password123' });
+    }
+
+    // 14b. DELETE /api/admin/students (clear all students)
+    if (pathname === '/api/admin/students' && method === 'DELETE') {
+      const studentUids: string[] = [];
+      for (const [uid, user] of Object.entries(db.users)) {
+        if (user.role === 'student') {
+          studentUids.push(uid);
+          delete db.users[uid];
+        }
+      }
+      for (const [token, tokenUid] of Object.entries(db.authTokens)) {
+        if (studentUids.includes(tokenUid)) {
+          delete db.authTokens[token];
+        }
+      }
+      for (const session of Object.values(db.sessions)) {
+        if (session.participants) {
+          for (const uid of studentUids) {
+            delete session.participants[uid];
+          }
+        }
+      }
+      saveDb(db);
+      return jsonResponse({ success: true, count: studentUids.length });
+    }
+
+    // 14c. DELETE /api/admin/students/:uid
+    const deleteStudentMatch = pathname.match(/\/api\/admin\/students\/([^/]+)$/);
+    if (deleteStudentMatch && method === 'DELETE') {
+      const [, targetUid] = deleteStudentMatch;
+      const user = db.users[targetUid];
+      if (!user || user.role !== 'student') return jsonResponse({ error: 'Student not found' }, 404);
+      delete db.users[targetUid];
+      for (const [token, tokenUid] of Object.entries(db.authTokens)) {
+        if (tokenUid === targetUid) delete db.authTokens[token];
+      }
+      for (const session of Object.values(db.sessions)) {
+        if (session.participants && session.participants[targetUid]) {
+          delete session.participants[targetUid];
+        }
+      }
+      saveDb(db);
+      return jsonResponse({ success: true });
     }
 
     // 15. GET /api/admin/sessions

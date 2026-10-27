@@ -1833,6 +1833,75 @@ app.post('/api/admin/students/:uid/reset-password', authMiddleware, adminOnly, (
   res.json({ success: true, message: 'Password updated successfully' });
 });
 
+// Delete all student accounts (bulk clear)
+app.delete('/api/admin/students', authMiddleware, adminOnly, (_req, res) => {
+  const studentUids: string[] = [];
+  for (const [uid, user] of Object.entries(db.users)) {
+    if (user.role === 'student') {
+      studentUids.push(uid);
+      delete db.users[uid];
+    }
+  }
+
+  // Remove matching auth tokens
+  for (const [token, tokenUid] of Object.entries(db.authTokens)) {
+    if (studentUids.includes(tokenUid)) {
+      delete db.authTokens[token];
+    }
+  }
+
+  // Clean scores and public leaderboard
+  for (const uid of studentUids) {
+    delete db.studentScores[uid];
+    delete db.publicLeaderboard[uid];
+  }
+
+  // Clean participants across sessions
+  for (const session of Object.values(db.sessions)) {
+    if (session.participants) {
+      for (const uid of studentUids) {
+        delete session.participants[uid];
+      }
+    }
+  }
+
+  persistDb();
+  res.json({ success: true, count: studentUids.length, message: `Removed ${studentUids.length} student accounts` });
+});
+
+// Delete single student account
+app.delete('/api/admin/students/:uid', authMiddleware, adminOnly, (req, res) => {
+  const { uid } = req.params;
+  const student = db.users[uid];
+  if (!student || student.role !== 'student') {
+    res.status(404).json({ error: 'Student not found' });
+    return;
+  }
+
+  delete db.users[uid];
+
+  // Remove auth tokens
+  for (const [token, tokenUid] of Object.entries(db.authTokens)) {
+    if (tokenUid === uid) {
+      delete db.authTokens[token];
+    }
+  }
+
+  // Remove score and leaderboard entries
+  delete db.studentScores[uid];
+  delete db.publicLeaderboard[uid];
+
+  // Remove from session participants
+  for (const session of Object.values(db.sessions)) {
+    if (session.participants && session.participants[uid]) {
+      delete session.participants[uid];
+    }
+  }
+
+  persistDb();
+  res.json({ success: true, message: 'Student account deleted successfully' });
+});
+
 // CSV Import of students
 app.post('/api/admin/students/import-csv', authMiddleware, adminOnly, (req, res) => {
   const { csvContent } = req.body;

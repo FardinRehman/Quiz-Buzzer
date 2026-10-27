@@ -519,6 +519,47 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  // Delete single student
+  const handleDeleteStudent = async (student: StudentItem) => {
+    if (!confirm(`Are you sure you want to remove student "${student.displayName}" (${student.studentId})?`)) return;
+    if (!token) return;
+    try {
+      const res = await fetch(apiUrl(`/api/admin/students/${student.uid}`), {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        fetchStudents();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete student');
+      }
+    } catch (err) {
+      console.error('Failed to delete student:', err);
+    }
+  };
+
+  // Clear all students
+  const handleClearAllStudents = async () => {
+    if (students.length === 0) return;
+    if (!confirm(`Warning: This will permanently remove all ${students.length} student accounts from the roster. Are you sure you want to proceed?`)) return;
+    if (!token) return;
+    try {
+      const res = await fetch(apiUrl('/api/admin/students'), {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        fetchStudents();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to clear students');
+      }
+    } catch (err) {
+      console.error('Failed to clear students:', err);
+    }
+  };
+
   // Create new session
   const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1529,6 +1570,16 @@ export const AdminDashboard: React.FC = () => {
                     <Upload className="w-4 h-4" />
                     <span>Import Student CSV</span>
                   </button>
+                  {students.length > 0 && (
+                    <button
+                      onClick={handleClearAllStudents}
+                      className="flex items-center gap-1.5 bg-red-950/60 hover:bg-red-900/80 border border-red-800/60 text-red-300 font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer transition-colors"
+                      title="Remove all students from roster"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Clear All Students</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1648,6 +1699,14 @@ export const AdminDashboard: React.FC = () => {
                                   ) : (
                                     <UserCheck className="w-3.5 h-3.5" />
                                   )}
+                                </button>
+
+                                <button
+                                  onClick={() => handleDeleteStudent(student)}
+                                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-950/60 hover:text-red-400 text-slate-400 transition-colors"
+                                  title="Delete Student Account"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             </td>
