@@ -539,10 +539,13 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  // Clear all students
-  const handleClearAllStudents = async () => {
-    if (students.length === 0) return;
-    if (!confirm(`Warning: This will permanently remove all ${students.length} student accounts from the roster. Are you sure you want to proceed?`)) return;
+  // Clear entire student list
+  const handleClearList = async () => {
+    if (students.length === 0) {
+      alert('The student list is already empty.');
+      return;
+    }
+    if (!confirm(`Warning: This will permanently remove all ${students.length} student account(s) from the roster list. Are you sure you want to proceed?`)) return;
     if (!token) return;
     try {
       const res = await fetch(apiUrl('/api/admin/students'), {
@@ -553,12 +556,13 @@ export const AdminDashboard: React.FC = () => {
         fetchStudents();
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to clear students');
+        alert(data.error || 'Failed to clear student list');
       }
     } catch (err) {
-      console.error('Failed to clear students:', err);
+      console.error('Failed to clear student list:', err);
     }
   };
+  const handleClearAllStudents = handleClearList;
 
   // Create new session
   const handleCreateSession = async (e: React.FormEvent) => {
@@ -1555,7 +1559,7 @@ export const AdminDashboard: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => setIsAddStudentOpen(true)}
                     className="flex items-center gap-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer shadow-md transition-colors"
@@ -1570,16 +1574,14 @@ export const AdminDashboard: React.FC = () => {
                     <Upload className="w-4 h-4" />
                     <span>Import Student CSV</span>
                   </button>
-                  {students.length > 0 && (
-                    <button
-                      onClick={handleClearAllStudents}
-                      className="flex items-center gap-1.5 bg-red-950/60 hover:bg-red-900/80 border border-red-800/60 text-red-300 font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer transition-colors"
-                      title="Remove all students from roster"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span>Clear All Students</span>
-                    </button>
-                  )}
+                  <button
+                    onClick={handleClearList}
+                    className="flex items-center gap-1.5 bg-red-950/60 hover:bg-red-900/80 border border-red-800/60 text-red-300 font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer transition-colors"
+                    title="Remove all students from the list"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Clear List</span>
+                  </button>
                 </div>
               </div>
 
