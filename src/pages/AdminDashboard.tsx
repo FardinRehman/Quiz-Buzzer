@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext.js';
 import { useLiveSession } from '../hooks/useLiveSession.js';
+import { LeaderboardView } from '../components/LeaderboardView.js';
 import { sound } from '../utils/audio.js';
 import { apiUrl } from '../utils/api.js';
+import type { QuestionBankItem } from '../types/quiz.js';
 import {
   Zap,
   Radio,
@@ -33,6 +35,15 @@ import {
   UserCheck,
   UserX,
   RefreshCw,
+  BookOpen,
+  Pause,
+  Eye,
+  EyeOff,
+  Trash2,
+  RotateCcw,
+  Sparkles,
+  HelpCircle,
+  FileText,
 } from 'lucide-react';
 
 interface StudentItem {
@@ -55,13 +66,13 @@ interface SessionListItem {
   participantCount: number;
 }
 
+type AdminTab = 'live' | 'questions' | 'leaderboard' | 'students' | 'sessions' | 'reports' | 'settings';
+
 export const AdminDashboard: React.FC = () => {
   const { user, token, logout } = useAuth();
 
   // Navigation tab
-  const [activeTab, setActiveTab] = useState<
-    'live' | 'students' | 'sessions' | 'reports' | 'settings'
-  >('live');
+  const [activeTab, setActiveTab] = useState<AdminTab>('live');
 
   // Active Session
   const [activeSessionId, setActiveSessionId] = useState<string>('ses_main_2026');
@@ -70,7 +81,7 @@ export const AdminDashboard: React.FC = () => {
   // Projector Fullscreen Mode
   const [isProjectorMode, setIsProjectorMode] = useState<boolean>(false);
 
-  // Question input
+  // Question input (manual question fallback)
   const [questionInput, setQuestionInput] = useState<string>('');
 
   // Audio preference
@@ -96,10 +107,39 @@ export const AdminDashboard: React.FC = () => {
   const [csvInput, setCsvInput] = useState('');
   const [csvStatusMessage, setCsvStatusMessage] = useState<string | null>(null);
 
+  // Question Bank State
+  const [questionBank, setQuestionBank] = useState<QuestionBankItem[]>([]);
+  const [questionBankSummary, setQuestionBankSummary] = useState({
+    total: 0,
+    availableCount: 0,
+    usedCount: 0,
+  });
+  const [questionSearch, setQuestionSearch] = useState<string>('');
+  const [questionFilter, setQuestionFilter] = useState<'all' | 'available' | 'used'>('all');
+  const [isQuestionCsvModalOpen, setIsQuestionCsvModalOpen] = useState<boolean>(false);
+  const [questionCsvText, setQuestionCsvText] = useState<string>('');
+  const [questionCsvPreview, setQuestionCsvPreview] = useState<{
+    valid: boolean;
+    totalDetected: number;
+    validCount: number;
+    invalidCount: number;
+    errors: string[];
+    preview: Array<{ question: string; correctAnswer: string }>;
+  } | null>(null);
+  const [isQuestionCsvLoading, setIsQuestionCsvLoading] = useState<boolean>(false);
+  const [questionCsvError, setQuestionCsvError] = useState<string | null>(null);
+  const [isConfirmClearBankOpen, setIsConfirmClearBankOpen] = useState<boolean>(false);
+  const [isConfirmResetSequenceOpen, setIsConfirmResetSequenceOpen] = useState<boolean>(false);
+  const [revealedAnswerIds, setRevealedAnswerIds] = useState<Record<string, boolean>>({});
+
   // New session modal
   const [isNewSessionOpen, setIsNewSessionOpen] = useState(false);
   const [newSessionTitle, setNewSessionTitle] = useState('');
   const [newSessionCode, setNewSessionCode] = useState('');
+
+  // Evaluation & Action states
+  const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
+  const [evaluationFeedback, setEvaluationFeedback] = useState<string | null>(null);
 
   // Live session hook
   const {
@@ -107,11 +147,21 @@ export const AdminDashboard: React.FC = () => {
     currentRound,
     participants,
     attempts,
+    contestants,
+    activeContestant,
+    leaderboard,
     isConnected,
     lastWinnerInfo,
     openRound,
     closeRound,
     nextRound,
+    startRandomRound,
+    evaluateAnswer,
+    revealAnswer,
+    skipQuestion,
+    pauseRound,
+    resumeRound,
+    endRound,
   } = useLiveSession({
     token,
     sessionId: activeSessionId,
@@ -141,7 +191,28 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  // Fetch sessions
+  // Fetch question bank
+  const fetchQuestions = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(apiUrl('/api/admin/questions'), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setQuestionBank(data.questions);
+        setQuestionBankSummary({
+          total: data.total,
+          availableCount: data.availableCount,
+          usedCount: data.usedCount,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load question bank:', err);
+    }
+  };
+
+  // Fetch sessions list
   const fetchSessions = async () => {
     if (!token) return;
     try {
@@ -159,55 +230,194 @@ export const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchStudents();
+    fetchQuestions();
     fetchSessions();
   }, [token]);
 
-  // Round Actions
-  const handleOpenRound = async () => {
-    try {
-      await openRound(questionInput.trim() || undefined);
-    } catch (err) {
-      alert('Error opening round: ' + err);
+  // Handle Question Bank CSV Preview
+  const handlePreviewQuestionCsv = async (csvContentToPreview: string) => {
+    if (!csvContentToPreview.trim()) {
+      setQuestionCsvPreview(null);
+      setQuestionCsvError(null);
+      return;
     }
-  };
-
-  const handleCloseRound = async () => {
-    await closeRound();
-  };
-
-  const handleNextRound = async () => {
-    await nextRound(questionInput.trim() || undefined);
-    setQuestionInput('');
-  };
-
-  // Student Actions
-  const handleCreateStudent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token) return;
+    setIsQuestionCsvLoading(true);
+    setQuestionCsvError(null);
     try {
-      const res = await fetch(apiUrl('/api/admin/students'), {
+      const res = await fetch(apiUrl('/api/admin/questions/preview-csv'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(newStudentForm),
+        body: JSON.stringify({ csvContent: csvContentToPreview }),
       });
       const data = await res.json();
       if (!res.ok) {
-        alert(data.error || 'Failed to create student');
-        return;
+        setQuestionCsvError(data.error || 'Failed to preview CSV');
+        setQuestionCsvPreview(null);
+      } else {
+        setQuestionCsvPreview(data);
       }
-      setIsAddStudentOpen(false);
-      setNewStudentForm({ displayName: '', studentId: '', email: '', password: '' });
-      fetchStudents();
     } catch {
-      alert('Network error adding student');
+      setQuestionCsvError('Network error trying to preview CSV');
+    } finally {
+      setIsQuestionCsvLoading(false);
     }
   };
 
+  // Handle File Upload from Input
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = evt => {
+      const text = (evt.target?.result as string) || '';
+      setQuestionCsvText(text);
+      handlePreviewQuestionCsv(text);
+    };
+    reader.readAsText(file);
+  };
+
+  // Handle Question CSV Import
+  const handleImportQuestionCsv = async () => {
+    if (!questionCsvText.trim()) return;
+    setIsQuestionCsvLoading(true);
+    setQuestionCsvError(null);
+    try {
+      const res = await fetch(apiUrl('/api/admin/questions/import-csv'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ csvContent: questionCsvText }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setQuestionCsvError(data.error || 'Failed to import CSV');
+      } else {
+        setIsQuestionCsvModalOpen(false);
+        setQuestionCsvText('');
+        setQuestionCsvPreview(null);
+        fetchQuestions();
+        alert(`Successfully imported ${data.importedCount} questions into Question Bank!`);
+      }
+    } catch {
+      setQuestionCsvError('Network error while importing questions');
+    } finally {
+      setIsQuestionCsvLoading(false);
+    }
+  };
+
+  // Delete question
+  const handleDeleteQuestion = async (qId: string) => {
+    if (!confirm('Are you sure you want to delete this question?')) return;
+    try {
+      const res = await fetch(apiUrl(`/api/admin/questions/${qId}`), {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        fetchQuestions();
+      }
+    } catch (err) {
+      console.error('Failed to delete question:', err);
+    }
+  };
+
+  // Clear question bank
+  const handleClearQuestionBank = async () => {
+    try {
+      const res = await fetch(apiUrl('/api/admin/questions/clear'), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setIsConfirmClearBankOpen(false);
+        fetchQuestions();
+      }
+    } catch (err) {
+      console.error('Failed to clear question bank:', err);
+    }
+  };
+
+  // Reset question sequence
+  const handleResetQuestionSequence = async () => {
+    try {
+      const res = await fetch(apiUrl('/api/admin/questions/reset-sequence'), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setIsConfirmResetSequenceOpen(false);
+        fetchQuestions();
+        alert('Question sequence reset! All questions are now eligible to be selected in random rounds again.');
+      }
+    } catch (err) {
+      console.error('Failed to reset question sequence:', err);
+    }
+  };
+
+  // Start round with random question from question bank
+  const handleStartRandomRound = async () => {
+    try {
+      setEvaluationFeedback(null);
+      const res = await startRandomRound();
+      if (res) {
+        fetchQuestions();
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'No questions available';
+      alert(message);
+    }
+  };
+
+  // Admin evaluation of contestant answer
+  const handleEvaluateAnswer = async (contestantIndex: 0 | 1, result: 'correct' | 'wrong') => {
+    setIsEvaluating(true);
+    setEvaluationFeedback(null);
+    try {
+      const data = await evaluateAnswer(contestantIndex, result);
+      if (data) {
+        const contestant = contestants[contestantIndex];
+        const points = result === 'correct' ? (contestantIndex === 0 ? 1000 : 700) : 0;
+        setEvaluationFeedback(
+          result === 'correct'
+            ? `Marked Correct! Awarded ${points} Crypto to ${contestant.displayName}.`
+            : `Marked Wrong. 0 points awarded to ${contestant.displayName}.`
+        );
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Evaluation error';
+      alert(message);
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
+
+  // Reveal correct answer to audience/students
+  const handleRevealAnswer = async () => {
+    try {
+      await revealAnswer();
+    } catch (err) {
+      console.error('Failed to reveal answer:', err);
+    }
+  };
+
+  // Skip current question
+  const handleSkipQuestion = async () => {
+    if (!confirm('Are you sure you want to skip this question?')) return;
+    try {
+      await skipQuestion();
+    } catch (err) {
+      console.error('Failed to skip question:', err);
+    }
+  };
+
+  // Toggle single student active/disabled
   const handleToggleStudentStatus = async (student: StudentItem) => {
-    if (!token) return;
     const nextStatus = student.accountStatus === 'active' ? 'disabled' : 'active';
     try {
       const res = await fetch(apiUrl(`/api/admin/students/${student.uid}`), {
@@ -221,14 +431,16 @@ export const AdminDashboard: React.FC = () => {
       if (res.ok) {
         fetchStudents();
       }
-    } catch {
-      alert('Failed to update student status');
+    } catch (err) {
+      console.error('Failed to update student:', err);
     }
   };
 
+  // Reset student password
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !selectedStudentForPass) return;
+    if (!selectedStudentForPass || !newPassInput) return;
+
     try {
       const res = await fetch(apiUrl(`/api/admin/students/${selectedStudentForPass.uid}/reset-password`), {
         method: 'POST',
@@ -242,19 +454,45 @@ export const AdminDashboard: React.FC = () => {
         setIsResetPassOpen(false);
         setNewPassInput('');
         setSelectedStudentForPass(null);
-        alert('Password updated successfully!');
+        alert('Password updated successfully');
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to reset password');
+        alert(data.error || 'Failed to update password');
       }
     } catch {
-      alert('Network error updating password');
+      alert('Error updating password');
     }
   };
 
-  const handleImportCsv = async (e: React.FormEvent) => {
+  // Create student account
+  const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !csvInput.trim()) return;
+    try {
+      const res = await fetch(apiUrl('/api/admin/students'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newStudentForm),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsAddStudentOpen(false);
+        setNewStudentForm({ displayName: '', studentId: '', email: '', password: '' });
+        fetchStudents();
+      } else {
+        alert(data.error || 'Failed to add student');
+      }
+    } catch {
+      alert('Error adding student');
+    }
+  };
+
+  // CSV Import students
+  const handleImportStudentsCsv = async () => {
+    if (!csvInput.trim()) return;
+    setCsvStatusMessage(null);
     try {
       const res = await fetch(apiUrl('/api/admin/students/import-csv'), {
         method: 'POST',
@@ -266,24 +504,26 @@ export const AdminDashboard: React.FC = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        setCsvStatusMessage(`Imported ${data.importedCount} student(s) successfully!`);
         fetchStudents();
-        setTimeout(() => {
-          setIsCsvImportOpen(false);
-          setCsvInput('');
-          setCsvStatusMessage(null);
-        }, 1500);
+        setCsvStatusMessage(`Successfully imported ${data.importedCount} student accounts.`);
+        if (data.errors && data.errors.length > 0) {
+          setCsvStatusMessage(
+            `Imported ${data.importedCount} accounts. (${data.errors.length} rows skipped due to duplicates/missing data)`
+          );
+        }
       } else {
-        setCsvStatusMessage(`Error: ${data.error}`);
+        setCsvStatusMessage(`Error: ${data.error || 'Failed to import CSV'}`);
       }
     } catch {
-      setCsvStatusMessage('Network error during CSV upload');
+      setCsvStatusMessage('Network error uploading CSV');
     }
   };
 
+  // Create new session
   const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !newSessionTitle.trim()) return;
+    if (!newSessionTitle.trim()) return;
+
     try {
       const res = await fetch(apiUrl('/api/admin/sessions'), {
         method: 'POST',
@@ -313,7 +553,9 @@ export const AdminDashboard: React.FC = () => {
 
   const handleExportCsv = () => {
     if (!activeSessionId) return;
-    window.location.href = apiUrl(`/api/admin/reports/${activeSessionId}/export-csv?token=${encodeURIComponent(token || '')}`);
+    window.location.href = apiUrl(
+      `/api/admin/reports/${activeSessionId}/export-csv?token=${encodeURIComponent(token || '')}`
+    );
   };
 
   // Filtered student list
@@ -322,14 +564,59 @@ export const AdminDashboard: React.FC = () => {
       s.displayName.toLowerCase().includes(studentSearch.toLowerCase()) ||
       s.studentId.toLowerCase().includes(studentSearch.toLowerCase()) ||
       s.email.toLowerCase().includes(studentSearch.toLowerCase());
+    const matchesFilter = studentFilter === 'all' ? true : s.accountStatus === studentFilter;
+    return matchesSearch && matchesFilter;
+  });
+
+  // Filtered questions in Question Bank
+  const filteredQuestions = questionBank.filter(q => {
+    const matchesSearch =
+      q.question.toLowerCase().includes(questionSearch.toLowerCase()) ||
+      q.correctAnswer.toLowerCase().includes(questionSearch.toLowerCase());
     const matchesFilter =
-      studentFilter === 'all' ? true : s.accountStatus === studentFilter;
+      questionFilter === 'all'
+        ? true
+        : questionFilter === 'available'
+        ? !q.usedInRoundId
+        : Boolean(q.usedInRoundId);
     return matchesSearch && matchesFilter;
   });
 
   const connectedParticipantsCount = Object.values(participants).filter(p => p.isConnected).length;
-  const isRoundOpen = currentRound?.status === 'OPEN';
-  const isWinnerLocked = currentRound?.status === 'WINNER_LOCKED';
+  const isRoundOpen =
+    currentRound?.status === 'OPEN' ||
+    currentRound?.status === 'QUESTION_ACTIVE' ||
+    (currentRound?.status === 'AWAITING_ANSWER_EVALUATION' && contestants.length < 2);
+
+  // Status mapping
+  const getRoundStatusDisplay = (status?: string) => {
+    switch (status) {
+      case 'QUESTION_ACTIVE':
+      case 'OPEN':
+        return { label: 'Question Active', badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 animate-pulse' };
+      case 'BUZZER_LOCKED':
+        return { label: 'Buzzer Locked', badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40' };
+      case 'AWAITING_ANSWER_EVALUATION':
+        return { label: 'Awaiting Answer Evaluation', badge: 'bg-purple-500/20 text-purple-300 border-purple-500/40 animate-pulse' };
+      case 'ANSWER_CORRECT':
+        return { label: 'Answer Correct', badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' };
+      case 'ANSWER_INCORRECT':
+        return { label: 'Answer Incorrect', badge: 'bg-red-500/20 text-red-300 border-red-500/40' };
+      case 'NEXT_CONTESTANT':
+        return { label: 'Next Contestant', badge: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40 animate-pulse' };
+      case 'QUESTION_COMPLETED':
+        return { label: 'Question Completed', badge: 'bg-slate-700/50 text-slate-300 border-slate-600' };
+      case 'ROUND_COMPLETED':
+      case 'CLOSED':
+        return { label: 'Round Completed', badge: 'bg-slate-800 text-slate-400 border-slate-700' };
+      case 'WAITING_TO_START':
+      case 'IDLE':
+      default:
+        return { label: 'Waiting to Start', badge: 'bg-slate-800 text-slate-400 border-slate-700' };
+    }
+  };
+
+  const statusDisplay = getRoundStatusDisplay(currentRound?.status);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-black">
@@ -361,9 +648,7 @@ export const AdminDashboard: React.FC = () => {
             <button
               onClick={() => setIsProjectorMode(!isProjectorMode)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-colors ${
-                isProjectorMode
-                  ? 'bg-amber-500 text-black'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                isProjectorMode ? 'bg-amber-500 text-black' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
               }`}
               title="Projector / Fullscreen Audience Mode"
             >
@@ -408,6 +693,39 @@ export const AdminDashboard: React.FC = () => {
               >
                 <Radio className="w-4 h-4" />
                 <span>Live Quiz Control</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('questions')}
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors w-full ${
+                  activeTab === 'questions'
+                    ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
+                    : 'text-slate-300 hover:bg-slate-800/60'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <BookOpen className="w-4 h-4" />
+                  <span>Question Bank</span>
+                </div>
+                <span
+                  className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                    activeTab === 'questions' ? 'bg-black/30 text-white' : 'bg-slate-800 text-cyan-400'
+                  }`}
+                >
+                  {questionBankSummary.availableCount}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('leaderboard')}
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors w-full ${
+                  activeTab === 'leaderboard'
+                    ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
+                    : 'text-slate-300 hover:bg-slate-800/60'
+                }`}
+              >
+                <Trophy className="w-4 h-4 text-yellow-400" />
+                <span>Leaderboard</span>
               </button>
 
               <button
@@ -471,7 +789,7 @@ export const AdminDashboard: React.FC = () => {
 
         {/* Center Panel Content */}
         <main className={`flex-1 p-4 md:p-6 overflow-y-auto ${isProjectorMode ? 'max-w-6xl mx-auto' : ''}`}>
-          {/* TAB: LIVE QUIZ (The Core Control Center) */}
+          {/* TAB: LIVE QUIZ */}
           {(activeTab === 'live' || isProjectorMode) && (
             <div className="space-y-6">
               {/* Session Overview Bar */}
@@ -506,111 +824,347 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* GIANT LIVE WINNER PANEL (Most important element!) */}
-              <div className="relative overflow-hidden rounded-3xl border-2 border-slate-800 bg-gradient-to-b from-slate-900/90 to-slate-950 p-6 md:p-10 shadow-2xl transition-all">
-                {isRoundOpen && (
-                  <div className="flex flex-col items-center justify-center text-center py-8">
-                    <div className="relative mb-4">
-                      <div className="w-20 h-20 rounded-full bg-cyan-500/20 border-2 border-cyan-400 animate-pulse-ring flex items-center justify-center">
-                        <Zap className="w-10 h-10 text-cyan-400 animate-bounce" />
+              {/* CURRENT QUESTION PROMINENT CARD & ROUND STATUS */}
+              <div className="rounded-3xl border-2 border-slate-800 bg-gradient-to-b from-slate-900/95 via-slate-900 to-slate-950 p-6 md:p-8 shadow-2xl relative overflow-hidden">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4 mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold uppercase text-cyan-400">
+                      ROUND #{currentRound?.roundNumber || 1}
+                    </span>
+                    <span className="text-slate-600">•</span>
+                    <span
+                      className={`text-xs font-mono font-bold px-3 py-1 rounded-full border ${statusDisplay.badge}`}
+                    >
+                      {statusDisplay.label}
+                    </span>
+                  </div>
+
+                  {/* Available bank count badge */}
+                  <div className="flex items-center gap-1.5 text-xs font-mono text-slate-400 bg-slate-950 px-3 py-1 rounded-lg border border-slate-800">
+                    <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>
+                      {questionBankSummary.availableCount} Question{questionBankSummary.availableCount === 1 ? '' : 's'} Available
+                    </span>
+                  </div>
+                </div>
+
+                {/* Question Text */}
+                <div className="my-4">
+                  <span className="text-xs font-mono uppercase text-slate-500 block mb-1">
+                    Question on Students&apos; Screens:
+                  </span>
+                  <p className="text-xl md:text-2xl font-bold text-white leading-relaxed">
+                    {currentRound?.questionText || (
+                      <span className="italic text-slate-500 font-normal">
+                        No question currently loaded. Click &ldquo;Start Random Question&rdquo; below to pick from the Question Bank.
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                {/* Admin-Only Answer Key Box */}
+                {currentRound?.correctAnswer && (
+                  <div className="mt-4 p-3.5 rounded-xl bg-slate-950 border border-emerald-500/30 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <div>
+                        <span className="text-[10px] font-mono text-emerald-400 uppercase font-bold block">
+                          Protected Answer Key (Admin Host Only)
+                        </span>
+                        <span className="text-sm font-semibold text-white">{currentRound.correctAnswer}</span>
                       </div>
                     </div>
-                    <span className="text-xs font-mono font-bold uppercase tracking-widest text-cyan-400 mb-2">
-                      REAL-TIME RACE ACTIVE
-                    </span>
-                    <h2 className="text-2xl md:text-4xl font-black text-white tracking-tight">
-                      BUZZER IS OPEN — WAITING FOR FIRST RESPONSE
-                    </h2>
-                    <p className="text-sm text-slate-400 mt-2 max-w-lg font-mono">
-                      Students are buzzing now. Atomic first-come lock will accept exactly one winner.
-                    </p>
-                  </div>
-                )}
 
-                {isWinnerLocked && lastWinnerInfo && (
-                  <div className="flex flex-col items-center justify-center text-center py-6 animate-fadeIn">
-                    <div className="inline-flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 px-4 py-1.5 rounded-full text-xs font-mono font-bold tracking-widest uppercase mb-4 shadow-lg shadow-emerald-900/20">
-                      <Trophy className="w-4 h-4 text-yellow-400" />
-                      <span>WINNER LOCKED — ROUND #{currentRound?.roundNumber}</span>
-                    </div>
-
-                    <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-2">
-                      {lastWinnerInfo.name}
-                    </h2>
-
-                    <div className="flex flex-wrap items-center justify-center gap-3 text-sm font-mono mt-2">
-                      <span className="bg-slate-800/80 px-3.5 py-1.5 rounded-xl border border-slate-700 text-cyan-300 font-bold">
-                        STUDENT ID: {lastWinnerInfo.studentId}
+                    {!currentRound.isAnswerRevealed ? (
+                      <button
+                        onClick={handleRevealAnswer}
+                        className="flex items-center gap-1 text-xs font-bold text-cyan-400 hover:text-cyan-300 bg-cyan-950/60 border border-cyan-800 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors"
+                        title="Reveal answer to students"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Reveal to Students</span>
+                      </button>
+                    ) : (
+                      <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-700/60">
+                        Revealed to Students
                       </span>
-                      {lastWinnerInfo.latencyMs !== null && (
-                        <span className="bg-emerald-950/60 px-3.5 py-1.5 rounded-xl border border-emerald-700/50 text-emerald-300 font-bold flex items-center gap-1.5">
-                          <Clock className="w-4 h-4" />
-                          <span>{lastWinnerInfo.latencyMs} ms RESPONSE</span>
-                        </span>
-                      )}
-                    </div>
-
-                    <p className="text-xs text-slate-400 mt-4 font-mono">
-                      All subsequent buzz submissions were atomically locked out and recorded.
-                    </p>
-                  </div>
-                )}
-
-                {!isRoundOpen && !isWinnerLocked && (
-                  <div className="flex flex-col items-center justify-center text-center py-8 text-slate-400">
-                    <Clock className="w-12 h-12 text-slate-600 mb-3" />
-                    <h3 className="text-xl font-bold text-slate-300">Buzzer is currently locked</h3>
-                    <p className="text-xs text-slate-500 mt-1 max-w-md">
-                      Ask your question verbally or display it below, then press &ldquo;OPEN BUZZER ROUND&rdquo; to unlock contestant buzzers.
-                    </p>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Host Control Actions Bar */}
-              <div className="bg-slate-900/60 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <label className="text-xs font-mono uppercase text-slate-400 block mb-1">
-                      Optional Question Prompt (Display on screen)
-                    </label>
-                    <input
-                      type="text"
-                      value={questionInput}
-                      onChange={e => setQuestionInput(e.target.value)}
-                      placeholder="e.g. Which algorithm is used for finding shortest paths in a weighted graph?"
-                      className="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 outline-none"
-                    />
+              {/* CONTESTANT ANSWER EVALUATION WORKFLOW PANEL */}
+              {contestants.length > 0 && (
+                <div className="bg-slate-900/90 border-2 border-purple-500/40 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Trophy className="w-5 h-5 text-yellow-400" />
+                      <h3 className="text-base font-bold text-white uppercase tracking-wider font-mono">
+                        Contestant Answer Evaluation Panel
+                      </h3>
+                    </div>
+
+                    <span className="text-xs font-mono bg-purple-950 text-purple-300 px-3 py-1 rounded-full border border-purple-700">
+                      Authoritative 2-Buzzer System
+                    </span>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 md:pt-5">
-                    {!isRoundOpen ? (
-                      <button
-                        onClick={handleOpenRound}
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-extrabold px-6 py-2.5 rounded-xl shadow-lg shadow-cyan-500/25 cursor-pointer text-sm tracking-wide transition-all"
+                  {evaluationFeedback && (
+                    <div className="mb-4 p-3 rounded-xl bg-emerald-950/50 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>{evaluationFeedback}</span>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {/* Contestant 1 Card */}
+                    <div
+                      className={`p-4 rounded-2xl border transition-all ${
+                        currentRound?.activeContestantIndex === 0 && contestants[0]?.evaluation === 'pending'
+                          ? 'bg-cyan-950/40 border-cyan-400 ring-2 ring-cyan-500/30'
+                          : contestants[0]?.evaluation === 'correct'
+                          ? 'bg-emerald-950/30 border-emerald-500/50'
+                          : contestants[0]?.evaluation === 'wrong'
+                          ? 'bg-red-950/30 border-red-500/50'
+                          : 'bg-slate-950/60 border-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-7 h-7 rounded-full bg-cyan-500 text-black font-black flex items-center justify-center font-mono text-xs">
+                            #1
+                          </span>
+                          <div>
+                            <span className="text-sm font-bold text-white block">
+                              {contestants[0].displayName}
+                            </span>
+                            <span className="text-[11px] text-slate-400 font-mono">
+                              ID: {contestants[0].studentId}
+                            </span>
+                          </div>
+                        </div>
+
+                        <span className="text-xs font-mono text-cyan-400 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800">
+                          {contestants[0].latencyMs} ms
+                        </span>
+                      </div>
+
+                      <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                        <span className="text-slate-400 font-mono">Reward If Correct:</span>
+                        <span className="font-mono font-bold text-cyan-300">+1,000 Crypto</span>
+                      </div>
+
+                      <div className="mt-2 text-xs font-mono">
+                        {contestants[0].evaluation === 'correct' ? (
+                          <span className="text-emerald-400 font-bold flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Correct (+1,000 Crypto Awarded)
+                          </span>
+                        ) : contestants[0].evaluation === 'wrong' ? (
+                          <span className="text-red-400 font-bold flex items-center gap-1">
+                            <XCircle className="w-3.5 h-3.5" /> Incorrect (0 Crypto)
+                          </span>
+                        ) : (
+                          <span className="text-purple-300 font-semibold animate-pulse">
+                            Awaiting Host Decision...
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Evaluation buttons for Contestant 1 */}
+                      {currentRound?.activeContestantIndex === 0 && contestants[0].evaluation === 'pending' && (
+                        <div className="mt-4 grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                          <button
+                            onClick={() => handleEvaluateAnswer(0, 'correct')}
+                            disabled={isEvaluating}
+                            className="flex items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-2 rounded-xl text-xs cursor-pointer shadow-md transition-all"
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Mark Correct</span>
+                          </button>
+                          <button
+                            onClick={() => handleEvaluateAnswer(0, 'wrong')}
+                            disabled={isEvaluating}
+                            className="flex items-center justify-center gap-1 bg-red-600 hover:bg-red-500 active:scale-95 text-white font-bold py-2 rounded-xl text-xs cursor-pointer shadow-md transition-all"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            <span>Mark Wrong</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Contestant 2 Card */}
+                    {contestants[1] ? (
+                      <div
+                        className={`p-4 rounded-2xl border transition-all ${
+                          currentRound?.activeContestantIndex === 1 && contestants[1]?.evaluation === 'pending'
+                            ? 'bg-indigo-950/40 border-indigo-400 ring-2 ring-indigo-500/30'
+                            : contestants[1]?.evaluation === 'correct'
+                            ? 'bg-emerald-950/30 border-emerald-500/50'
+                            : contestants[1]?.evaluation === 'wrong'
+                            ? 'bg-red-950/30 border-red-500/50'
+                            : 'bg-slate-950/60 border-slate-800'
+                        }`}
                       >
-                        <Play className="w-4 h-4 fill-current" />
-                        <span>OPEN BUZZER ROUND</span>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="w-7 h-7 rounded-full bg-indigo-500 text-white font-black flex items-center justify-center font-mono text-xs">
+                              #2
+                            </span>
+                            <div>
+                              <span className="text-sm font-bold text-white block">
+                                {contestants[1].displayName}
+                              </span>
+                              <span className="text-[11px] text-slate-400 font-mono">
+                                ID: {contestants[1].studentId}
+                              </span>
+                            </div>
+                          </div>
+
+                          <span className="text-xs font-mono text-indigo-300 bg-indigo-950 px-2 py-0.5 rounded border border-indigo-800">
+                            {contestants[1].latencyMs} ms
+                          </span>
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                          <span className="text-slate-400 font-mono">Reward If Correct:</span>
+                          <span className="font-mono font-bold text-indigo-300">+700 Crypto</span>
+                        </div>
+
+                        <div className="mt-2 text-xs font-mono">
+                          {contestants[1].evaluation === 'correct' ? (
+                            <span className="text-emerald-400 font-bold flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Correct (+700 Crypto Awarded)
+                            </span>
+                          ) : contestants[1].evaluation === 'wrong' ? (
+                            <span className="text-red-400 font-bold flex items-center gap-1">
+                              <XCircle className="w-3.5 h-3.5" /> Incorrect (0 Crypto)
+                            </span>
+                          ) : currentRound?.activeContestantIndex === 1 ? (
+                            <span className="text-indigo-300 font-semibold animate-pulse">
+                              Now Answering! Host Decision Required
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">On Deck (Waiting for Contestant #1)</span>
+                          )}
+                        </div>
+
+                        {/* Evaluation buttons for Contestant 2 */}
+                        {currentRound?.activeContestantIndex === 1 && contestants[1].evaluation === 'pending' && (
+                          <div className="mt-4 grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                            <button
+                              onClick={() => handleEvaluateAnswer(1, 'correct')}
+                              disabled={isEvaluating}
+                              className="flex items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-2 rounded-xl text-xs cursor-pointer shadow-md transition-all"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                              <span>Mark Correct</span>
+                            </button>
+                            <button
+                              onClick={() => handleEvaluateAnswer(1, 'wrong')}
+                              disabled={isEvaluating}
+                              className="flex items-center justify-center gap-1 bg-red-600 hover:bg-red-500 active:scale-95 text-white font-bold py-2 rounded-xl text-xs cursor-pointer shadow-md transition-all"
+                            >
+                              <XCircle className="w-4 h-4" />
+                              <span>Mark Wrong</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="p-4 rounded-2xl border border-dashed border-slate-800 bg-slate-950/40 flex flex-col items-center justify-center text-center text-xs text-slate-500">
+                        <Users className="w-6 h-6 mb-1 text-slate-600" />
+                        <span>No second contestant has buzzed yet.</span>
+                        {isRoundOpen && <span className="text-cyan-400 mt-1 font-mono">Buzzer still accepts Contestant #2</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* HOST CONTROL ACTION BUTTONS */}
+              <div className="bg-slate-900/60 border border-slate-800 p-4 md:p-6 rounded-2xl space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
+                      Quizmaster Round Controls
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Select random questions, control buzzer state, or proceed through the competition.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Start Random Question Button */}
+                    <button
+                      onClick={handleStartRandomRound}
+                      className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-extrabold px-5 py-2.5 rounded-xl shadow-lg shadow-cyan-500/25 cursor-pointer text-xs md:text-sm tracking-wide transition-all"
+                    >
+                      <Sparkles className="w-4 h-4 text-yellow-300" />
+                      <span>START RANDOM QUESTION</span>
+                    </button>
+
+                    {/* Pause / Resume */}
+                    {isRoundOpen ? (
+                      <button
+                        onClick={pauseRound}
+                        className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer transition-colors"
+                        title="Lock buzzers temporarily"
+                      >
+                        <Pause className="w-3.5 h-3.5" />
+                        <span>Pause</span>
                       </button>
                     ) : (
-                      <button
-                        onClick={handleCloseRound}
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white font-extrabold px-6 py-2.5 rounded-xl shadow-lg shadow-red-600/25 cursor-pointer text-sm tracking-wide transition-all"
-                      >
-                        <Square className="w-4 h-4 fill-current" />
-                        <span>CLOSE ROUND</span>
-                      </button>
+                      currentRound?.status === 'BUZZER_LOCKED' &&
+                      contestants.length < 2 && (
+                        <button
+                          onClick={resumeRound}
+                          className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer transition-colors"
+                          title="Reopen buzzers"
+                        >
+                          <Play className="w-3.5 h-3.5" />
+                          <span>Resume</span>
+                        </button>
+                      )
                     )}
 
+                    {/* Skip Question */}
                     <button
-                      onClick={handleNextRound}
-                      className="flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-xl text-sm cursor-pointer transition-colors"
-                      title="Prepare Next Question"
+                      onClick={handleSkipQuestion}
+                      className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer transition-colors"
+                      title="Skip question without awarding points"
                     >
-                      <SkipForward className="w-4 h-4" />
-                      <span className="hidden sm:inline">NEXT QUESTION</span>
+                      <SkipForward className="w-3.5 h-3.5" />
+                      <span>Skip</span>
+                    </button>
+
+                    {/* End Round */}
+                    <button
+                      onClick={endRound}
+                      className="flex items-center gap-1.5 bg-red-950/60 hover:bg-red-900/60 border border-red-500/40 text-red-300 font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer transition-colors"
+                      title="End current round"
+                    >
+                      <Square className="w-3.5 h-3.5" />
+                      <span>End Round</span>
                     </button>
                   </div>
+                </div>
+
+                {/* Manual Question Override (Existing functionality preserved) */}
+                <div className="pt-3 border-t border-slate-800/80 flex flex-col md:flex-row gap-2">
+                  <input
+                    type="text"
+                    value={questionInput}
+                    onChange={e => setQuestionInput(e.target.value)}
+                    placeholder="Or type a custom question prompt manually..."
+                    className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 outline-none focus:border-cyan-500"
+                  />
+                  <button
+                    onClick={() => openRound(questionInput)}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl cursor-pointer"
+                  >
+                    Open Custom Prompt
+                  </button>
                 </div>
               </div>
 
@@ -635,23 +1189,23 @@ export const AdminDashboard: React.FC = () => {
                   ) : (
                     <div className="space-y-2 max-h-72 overflow-y-auto">
                       {attempts.map((att, idx) => {
-                        const isWinner = att.status === 'ACCEPTED_WINNER';
+                        const isAccepted = att.status.includes('ACCEPTED');
                         return (
                           <div
                             key={idx}
                             className={`flex items-center justify-between p-3 rounded-xl border text-xs ${
-                              isWinner
-                                ? 'bg-emerald-950/40 border-emerald-500/50 text-white'
+                              isAccepted
+                                ? 'bg-cyan-950/40 border-cyan-500/50 text-white'
                                 : 'bg-slate-950/60 border-slate-800 text-slate-300'
                             }`}
                           >
                             <div className="flex items-center gap-3">
                               <span
                                 className={`w-6 h-6 rounded-full flex items-center justify-center font-mono font-bold text-[11px] ${
-                                  isWinner ? 'bg-emerald-500 text-black' : 'bg-slate-800 text-slate-400'
+                                  isAccepted ? 'bg-cyan-500 text-black' : 'bg-slate-800 text-slate-400'
                                 }`}
                               >
-                                {idx + 1}
+                                {att.position || idx + 1}
                               </span>
                               <div>
                                 <span className="font-bold block">{att.displayName}</span>
@@ -662,10 +1216,10 @@ export const AdminDashboard: React.FC = () => {
                             <div className="text-right">
                               <span
                                 className={`font-mono font-bold block ${
-                                  isWinner ? 'text-emerald-400' : 'text-amber-400'
+                                  isAccepted ? 'text-cyan-400' : 'text-amber-400'
                                 }`}
                               >
-                                {isWinner ? 'FIRST (ACCEPTED)' : 'REJECTED (TOO LATE)'}
+                                {att.status}
                               </span>
                               <span className="text-[10px] text-slate-400 font-mono">
                                 +{att.latencyMs} ms
@@ -724,7 +1278,232 @@ export const AdminDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* TAB: STUDENTS MANAGEMENT */}
+          {/* TAB: QUESTION BANK (NEW REQUIRED SECTION) */}
+          {activeTab === 'questions' && !isProjectorMode && (
+            <div className="space-y-6">
+              {/* Question Bank Header & Summary */}
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-black text-white flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-cyan-400" />
+                    <span>Question Bank Management</span>
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Upload questions and protected answer keys via CSV, preview validation, and manage the quiz question sequence.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setQuestionCsvText('');
+                      setQuestionCsvPreview(null);
+                      setQuestionCsvError(null);
+                      setIsQuestionCsvModalOpen(true);
+                    }}
+                    className="flex items-center gap-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer shadow-md transition-colors"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>Upload CSV Questions</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsConfirmResetSequenceOpen(true)}
+                    className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer transition-colors"
+                    title="Mark all questions as unused again without resetting student scores"
+                  >
+                    <RotateCcw className="w-4 h-4 text-cyan-400" />
+                    <span>Reset Question Sequence</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsConfirmClearBankOpen(true)}
+                    className="flex items-center gap-1.5 bg-red-950/60 hover:bg-red-900/60 border border-red-500/40 text-red-300 font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Clear Question Bank</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Status Metric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-2xl flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400 font-mono block">Total Questions</span>
+                    <span className="text-xl font-black text-white font-mono">{questionBankSummary.total}</span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-2xl flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400 font-mono block">Available For Next Round</span>
+                    <span className="text-xl font-black text-emerald-400 font-mono">
+                      {questionBankSummary.availableCount}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-2xl flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400 font-mono block">Used In Rounds</span>
+                    <span className="text-xl font-black text-slate-300 font-mono">{questionBankSummary.usedCount}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Search & Filter */}
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 border border-slate-800 p-3 rounded-xl">
+                <div className="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 flex-1 max-w-sm">
+                  <Search className="w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={questionSearch}
+                    onChange={e => setQuestionSearch(e.target.value)}
+                    placeholder="Search questions or answers..."
+                    className="bg-transparent text-xs text-white placeholder-slate-500 outline-none w-full"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 text-xs font-mono">
+                  <button
+                    onClick={() => setQuestionFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg cursor-pointer ${
+                      questionFilter === 'all' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    All ({questionBank.length})
+                  </button>
+                  <button
+                    onClick={() => setQuestionFilter('available')}
+                    className={`px-3 py-1.5 rounded-lg cursor-pointer ${
+                      questionFilter === 'available'
+                        ? 'bg-cyan-600 text-white font-bold'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Available ({questionBankSummary.availableCount})
+                  </button>
+                  <button
+                    onClick={() => setQuestionFilter('used')}
+                    className={`px-3 py-1.5 rounded-lg cursor-pointer ${
+                      questionFilter === 'used' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Used ({questionBankSummary.usedCount})
+                  </button>
+                </div>
+              </div>
+
+              {/* Question Management Table */}
+              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-mono uppercase">
+                      <tr>
+                        <th className="py-3 px-4 w-12">#</th>
+                        <th className="py-3 px-4">Question Text</th>
+                        <th className="py-3 px-4">Correct Answer Key</th>
+                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {filteredQuestions.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-10 text-center text-slate-500 font-mono">
+                            No questions found matching criteria. Upload a CSV to get started!
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredQuestions.map((q, idx) => {
+                          const isRevealed = revealedAnswerIds[q.id];
+                          return (
+                            <tr key={q.id} className="hover:bg-slate-800/30 transition-colors">
+                              <td className="py-3 px-4 font-mono text-slate-500">{idx + 1}</td>
+                              <td className="py-3 px-4">
+                                <span className="font-medium text-slate-100 block max-w-lg leading-relaxed">
+                                  {q.question}
+                                </span>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-emerald-400 font-semibold">
+                                    {isRevealed ? q.correctAnswer : '••••••••••••'}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      setRevealedAnswerIds(prev => ({ ...prev, [q.id]: !prev[q.id] }))
+                                    }
+                                    className="text-slate-500 hover:text-slate-300 p-1"
+                                    title={isRevealed ? 'Hide Answer' : 'Reveal Answer'}
+                                  >
+                                    {isRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                  </button>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4">
+                                {q.usedInRoundId ? (
+                                  <span className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
+                                    Used
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2 py-0.5 rounded">
+                                    Eligible for Round
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-3 px-4 text-right">
+                                <button
+                                  onClick={() => handleDeleteQuestion(q.id)}
+                                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-950/60 hover:text-red-400 text-slate-400 transition-colors"
+                                  title="Delete Question"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: LEADERBOARD */}
+          {activeTab === 'leaderboard' && !isProjectorMode && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-white flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-yellow-400" />
+                    <span>Real-Time Contestant Leaderboard</span>
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Deterministic tie-breaking based on earliest timestamp reached. Updates dynamically upon admin answer evaluation.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl">
+                <LeaderboardView entries={leaderboard} />
+              </div>
+            </div>
+          )}
+
+          {/* TAB: STUDENTS MANAGEMENT (Preserved) */}
           {activeTab === 'students' && !isProjectorMode && (
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
@@ -748,7 +1527,7 @@ export const AdminDashboard: React.FC = () => {
                     className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-3.5 py-2 rounded-xl text-xs cursor-pointer transition-colors"
                   >
                     <Upload className="w-4 h-4" />
-                    <span>Import CSV</span>
+                    <span>Import Student CSV</span>
                   </button>
                 </div>
               </div>
@@ -778,9 +1557,7 @@ export const AdminDashboard: React.FC = () => {
                   <button
                     onClick={() => setStudentFilter('active')}
                     className={`px-3 py-1.5 rounded-lg cursor-pointer ${
-                      studentFilter === 'active'
-                        ? 'bg-cyan-600 text-white font-bold'
-                        : 'text-slate-400 hover:text-white'
+                      studentFilter === 'active' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     Active ({students.filter(s => s.accountStatus === 'active').length})
@@ -788,9 +1565,7 @@ export const AdminDashboard: React.FC = () => {
                   <button
                     onClick={() => setStudentFilter('disabled')}
                     className={`px-3 py-1.5 rounded-lg cursor-pointer ${
-                      studentFilter === 'disabled'
-                        ? 'bg-cyan-600 text-white font-bold'
-                        : 'text-slate-400 hover:text-white'
+                      studentFilter === 'disabled' ? 'bg-cyan-600 text-white font-bold' : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     Disabled ({students.filter(s => s.accountStatus === 'disabled').length})
@@ -886,7 +1661,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* TAB: SESSIONS */}
+          {/* TAB: SESSIONS (Preserved) */}
           {activeTab === 'sessions' && !isProjectorMode && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -948,9 +1723,9 @@ export const AdminDashboard: React.FC = () => {
                         {!isCurrent && (
                           <button
                             onClick={() => setActiveSessionId(s.sessionId)}
-                            className="text-xs text-cyan-400 hover:text-cyan-300 font-mono font-bold cursor-pointer"
+                            className="text-xs font-mono font-bold text-cyan-400 hover:text-cyan-300"
                           >
-                            Switch to this session →
+                            Set As Active →
                           </button>
                         )}
                       </div>
@@ -961,193 +1736,314 @@ export const AdminDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* TAB: REPORTS */}
+          {/* TAB: REPORTS (Preserved) */}
           {activeTab === 'reports' && !isProjectorMode && (
             <div className="space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-black text-white">Quiz Results & CSV Export</h2>
+                  <h2 className="text-xl font-black text-white">Competition Audit & CSV Export</h2>
                   <p className="text-xs text-slate-400 mt-1">
-                    Review official round winners, server timestamps, latencies, and export comprehensive CSV files.
+                    Download complete round logs including millisecond timestamps, student USNs, and evaluation results.
                   </p>
                 </div>
-
                 <button
                   onClick={handleExportCsv}
-                  className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs cursor-pointer shadow-md transition-colors"
+                  className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs cursor-pointer shadow-lg transition-colors"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Export Full Session CSV</span>
+                  <span>Download Session CSV</span>
                 </button>
               </div>
 
-              {/* Table of rounds */}
-              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-mono uppercase">
-                      <tr>
-                        <th className="py-3 px-4">Round #</th>
-                        <th className="py-3 px-4">Question Prompt</th>
-                        <th className="py-3 px-4">Winner Name</th>
-                        <th className="py-3 px-4">Winner ID</th>
-                        <th className="py-3 px-4">Response Latency</th>
-                        <th className="py-3 px-4">Total Attempts</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60">
-                      {session && Object.values(session.rounds).length > 0 ? (
-                        Object.values(session.rounds).map(r => (
-                          <tr key={r.roundId} className="hover:bg-slate-800/30 transition-colors">
-                            <td className="py-3 px-4 font-mono font-bold text-cyan-400">#{r.roundNumber}</td>
-                            <td className="py-3 px-4 max-w-xs truncate text-slate-200">
-                              {r.questionText || <span className="italic text-slate-500">Verbal Question</span>}
-                            </td>
-                            <td className="py-3 px-4 font-bold text-white">
-                              {r.winnerNameSnapshot || <span className="text-slate-500">No Winner</span>}
-                            </td>
-                            <td className="py-3 px-4 font-mono text-cyan-400">{r.winnerStudentId || 'N/A'}</td>
-                            <td className="py-3 px-4 font-mono">
-                              {r.winnerLatencyMs !== null ? `${r.winnerLatencyMs} ms` : 'N/A'}
-                            </td>
-                            <td className="py-3 px-4 font-mono text-slate-400">{r.attempts.length}</td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={6} className="py-8 text-center text-slate-500 font-mono">
-                            No round results available yet.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl space-y-4">
+                <h3 className="text-sm font-bold text-slate-200">Export Scope:</h3>
+                <p className="text-xs text-slate-400 leading-relaxed font-mono">
+                  The generated report contains row-level details for every round:
+                  <br />• Session Title & Session PIN
+                  <br />• Round Number & Question Text
+                  <br />• Authoritative Winner Name & USN
+                  <br />• Timestamp & Latency (ms)
+                  <br />• Total Buzzer Submissions per round
+                </p>
               </div>
             </div>
           )}
 
-          {/* TAB: SETTINGS */}
+          {/* TAB: SETTINGS (Preserved) */}
           {activeTab === 'settings' && !isProjectorMode && (
-            <div className="space-y-6 max-w-2xl">
+            <div className="space-y-6">
               <div>
                 <h2 className="text-xl font-black text-white">Platform Settings & Security</h2>
-                <p className="text-xs text-slate-400 mt-1">
-                  System information, audio synthesis preferences, and root administrator credentials.
-                </p>
+                <p className="text-xs text-slate-400 mt-1">Authoritative configuration and system info.</p>
               </div>
 
-              <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl space-y-4">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-cyan-400" />
-                  <span>Authorized Administrator</span>
-                </h3>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between py-1.5 border-b border-slate-800">
-                    <span className="text-slate-400">Admin Identifier:</span>
-                    <span className="font-mono text-white">{user?.email}</span>
-                  </div>
-                  <div className="flex justify-between py-1.5 border-b border-slate-800">
-                    <span className="text-slate-400">Role Authority:</span>
-                    <span className="font-mono text-cyan-400">Server Controlled Root Admin</span>
-                  </div>
-                  <div className="flex justify-between py-1.5">
-                    <span className="text-slate-400">Buzzer Engine:</span>
-                    <span className="font-mono text-emerald-400">Atomic Serialized Mutex</span>
+              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-6 h-6 text-cyan-400" />
+                  <div>
+                    <h3 className="text-sm font-bold text-white">System Architecture</h3>
+                    <p className="text-xs text-slate-400">
+                      Authoritative in-memory Store with disk persistence and Realtime Server-Sent Events (SSE).
+                    </p>
                   </div>
                 </div>
-              </div>
-
-              <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl space-y-4">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Volume2 className="w-4 h-4 text-cyan-400" />
-                  <span>Synthesizer Audio Feedback</span>
-                </h3>
-                <p className="text-xs text-slate-400">
-                  QuickBuzz uses the zero-dependency Web Audio API synthesizer for instant zero-latency chimes.
-                </p>
-                <button
-                  onClick={toggleSound}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
-                    isMuted ? 'bg-slate-800 text-slate-400' : 'bg-cyan-600 text-white'
-                  }`}
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  <span>{isMuted ? 'Audio Feedback is Muted' : 'Audio Feedback is Enabled'}</span>
-                </button>
               </div>
             </div>
           )}
         </main>
       </div>
 
-      {/* MODAL: Add Single Student */}
+      {/* CSV QUESTION UPLOAD & PREVIEW MODAL */}
+      {isQuestionCsvModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Upload className="w-5 h-5 text-cyan-400" />
+                <h3 className="text-base font-bold text-white">Upload Question Bank CSV</h3>
+              </div>
+              <button
+                onClick={() => setIsQuestionCsvModalOpen(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto flex-1 space-y-4">
+              {/* Format Guide */}
+              <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs">
+                <span className="font-mono text-cyan-400 font-bold block mb-1">Required CSV Format:</span>
+                <code className="text-slate-300 font-mono text-[11px] block bg-slate-900 p-2 rounded">
+                  question,correct_answer
+                  <br />
+                  &quot;What is the capital of Karnataka?&quot;,&quot;Bengaluru&quot;
+                  <br />
+                  &quot;Which language is used to build React applications?&quot;,&quot;JavaScript&quot;
+                </code>
+                <span className="text-[11px] text-slate-500 mt-1 block">
+                  Supports UTF-8 BOM, quoted fields with internal commas, quotes, and custom spacing.
+                </span>
+              </div>
+
+              {/* File Input and Textarea */}
+              <div>
+                <label className="block text-xs font-mono text-slate-400 mb-1">
+                  Choose .csv File or Paste Content:
+                </label>
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={handleFileUpload}
+                  className="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-cyan-600 file:text-white hover:file:bg-cyan-500 mb-3"
+                />
+
+                <textarea
+                  rows={5}
+                  value={questionCsvText}
+                  onChange={e => {
+                    setQuestionCsvText(e.target.value);
+                    handlePreviewQuestionCsv(e.target.value);
+                  }}
+                  placeholder='question,correct_answer&#10;"What does CPU stand for?","Central Processing Unit"'
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-slate-200 outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              {/* Validation Errors Callout */}
+              {questionCsvPreview && questionCsvPreview.errors.length > 0 && (
+                <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/40 text-xs space-y-1">
+                  <span className="font-bold text-red-300 flex items-center gap-1">
+                    <AlertTriangle className="w-4 h-4 text-red-400" />
+                    Validation Issues Detected:
+                  </span>
+                  {questionCsvPreview.errors.map((err, idx) => (
+                    <p key={idx} className="text-red-300/90 font-mono text-[11px]">
+                      • {err}
+                    </p>
+                  ))}
+                </div>
+              )}
+
+              {/* Preview Table */}
+              {questionCsvPreview && (
+                <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/80">
+                  <div className="p-3 border-b border-slate-800 flex items-center justify-between text-xs font-mono">
+                    <span className="text-slate-300 font-bold">
+                      Detected: {questionCsvPreview.totalDetected} Row{questionCsvPreview.totalDetected === 1 ? '' : 's'}
+                    </span>
+                    <span className="text-emerald-400 font-bold">
+                      Valid: {questionCsvPreview.validCount}
+                    </span>
+                  </div>
+
+                  <div className="max-h-48 overflow-y-auto">
+                    <table className="w-full text-left text-[11px]">
+                      <thead className="bg-slate-900 border-b border-slate-800 text-slate-400 font-mono uppercase">
+                        <tr>
+                          <th className="py-2 px-3">#</th>
+                          <th className="py-2 px-3">Question</th>
+                          <th className="py-2 px-3">Correct Answer</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60">
+                        {questionCsvPreview.preview.map((q, idx) => (
+                          <tr key={idx} className="hover:bg-slate-900/40">
+                            <td className="py-2 px-3 font-mono text-slate-500">{idx + 1}</td>
+                            <td className="py-2 px-3 text-slate-200">{q.question}</td>
+                            <td className="py-2 px-3 font-mono text-emerald-400 font-bold">{q.correctAnswer}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {questionCsvError && (
+                <div className="text-xs text-red-400 bg-red-950/40 border border-red-500/40 p-2.5 rounded-xl">
+                  {questionCsvError}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-800 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setIsQuestionCsvModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs text-slate-400 hover:text-white bg-slate-800"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleImportQuestionCsv}
+                disabled={isQuestionCsvLoading || !questionCsvPreview || questionCsvPreview.validCount === 0}
+                className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 cursor-pointer shadow-md"
+              >
+                {isQuestionCsvLoading
+                  ? 'Importing...'
+                  : `Confirm & Import ${questionCsvPreview?.validCount || 0} Questions`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM CLEAR QUESTION BANK MODAL */}
+      {isConfirmClearBankOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl">
+            <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-white mb-2">Clear Question Bank?</h3>
+            <p className="text-xs text-slate-400 mb-6">
+              This will remove all questions from the question bank. Existing student scores and completed rounds will be preserved.
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => setIsConfirmClearBankOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs text-slate-300 bg-slate-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClearQuestionBank}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500"
+              >
+                Confirm Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM RESET SEQUENCE MODAL */}
+      {isConfirmResetSequenceOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl">
+            <RotateCcw className="w-12 h-12 text-cyan-400 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-white mb-2">Reset Question Sequence?</h3>
+            <p className="text-xs text-slate-400 mb-6">
+              This will mark all questions in the bank as eligible for upcoming rounds again. Student scores and leaderboard standings will NOT be erased.
+            </p>
+            <div className="flex justify-center gap-3">
+              <button
+                onClick={() => setIsConfirmResetSequenceOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs text-slate-300 bg-slate-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResetQuestionSequence}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-500"
+              >
+                Reset Sequence
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Single Student Modal (Existing preserved) */}
       {isAddStudentOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-3">Add Student Account</h3>
+            <h3 className="text-base font-bold text-white mb-4">Add Contestant Account</h3>
             <form onSubmit={handleCreateStudent} className="space-y-3">
               <div>
-                <label className="text-xs font-mono text-slate-400 block mb-1">Full Name</label>
+                <label className="block text-xs font-mono text-slate-400 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={newStudentForm.displayName}
                   onChange={e => setNewStudentForm({ ...newStudentForm, displayName: e.target.value })}
-                  placeholder="e.g. Rachel Adams"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
                 />
               </div>
-
               <div>
-                <label className="text-xs font-mono text-slate-400 block mb-1">Student ID / USN</label>
+                <label className="block text-xs font-mono text-slate-400 mb-1">Student ID / USN</label>
                 <input
                   type="text"
                   required
                   value={newStudentForm.studentId}
                   onChange={e => setNewStudentForm({ ...newStudentForm, studentId: e.target.value.toUpperCase() })}
-                  placeholder="e.g. 1MS21CS099"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono uppercase outline-none focus:border-cyan-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white uppercase font-mono"
                 />
               </div>
-
               <div>
-                <label className="text-xs font-mono text-slate-400 block mb-1">Email Address</label>
+                <label className="block text-xs font-mono text-slate-400 mb-1">Email</label>
                 <input
                   type="email"
                   required
                   value={newStudentForm.email}
                   onChange={e => setNewStudentForm({ ...newStudentForm, email: e.target.value })}
-                  placeholder="e.g. rachel@campus.edu"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono"
                 />
               </div>
-
               <div>
-                <label className="text-xs font-mono text-slate-400 block mb-1">Password</label>
+                <label className="block text-xs font-mono text-slate-400 mb-1">Password</label>
                 <input
                   type="password"
                   required
                   value={newStudentForm.password}
                   onChange={e => setNewStudentForm({ ...newStudentForm, password: e.target.value })}
-                  placeholder="e.g. password123"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-500"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono"
                 />
               </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex gap-2 justify-end pt-3">
                 <button
                   type="button"
                   onClick={() => setIsAddStudentOpen(false)}
-                  className="px-4 py-2 text-xs text-slate-400 hover:text-white"
+                  className="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white bg-slate-800"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-500 rounded-xl shadow-md cursor-pointer"
+                  className="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-500"
                 >
-                  Create Account
+                  Create
                 </button>
               </div>
             </form>
@@ -1155,90 +2051,79 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL: Import CSV */}
+      {/* CSV Import Students Modal (Existing preserved) */}
       {isCsvImportOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-1">Import Students from CSV</h3>
-            <p className="text-xs text-slate-400 mb-3">
-              Paste CSV text with columns: <span className="font-mono text-cyan-400">Name, Student ID, Email, Password</span>
+            <h3 className="text-base font-bold text-white mb-2">Bulk Import Contestants (CSV)</h3>
+            <p className="text-xs text-slate-400 mb-4 font-mono">
+              Header format: Name,Student ID,Email,Password
             </p>
-
-            <form onSubmit={handleImportCsv} className="space-y-3">
-              <textarea
-                rows={6}
-                value={csvInput}
-                onChange={e => setCsvInput(e.target.value)}
-                placeholder={`Name,Student ID,Email,Password\nElena Gilbert,1MS21CS111,elena@campus.edu,password123\nStefan Salvatore,1MS21CS112,stefan@campus.edu,password123`}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs font-mono text-white outline-none focus:border-cyan-500"
-              />
-
-              {csvStatusMessage && (
-                <div className="text-xs font-mono p-2.5 rounded-lg bg-slate-800 text-cyan-300">
-                  {csvStatusMessage}
-                </div>
-              )}
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsCsvImportOpen(false);
-                    setCsvStatusMessage(null);
-                  }}
-                  className="px-4 py-2 text-xs text-slate-400 hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-500 rounded-xl shadow-md cursor-pointer"
-                >
-                  Process CSV Import
-                </button>
+            <textarea
+              rows={6}
+              value={csvInput}
+              onChange={e => setCsvInput(e.target.value)}
+              placeholder="Name,Student ID,Email,Password&#10;Alex Turner,1MS21CS042,alex@campus.edu,secret123"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs font-mono text-slate-200 outline-none mb-3"
+            />
+            {csvStatusMessage && (
+              <div className="text-xs text-cyan-300 font-mono mb-3 bg-cyan-950/40 p-2.5 rounded-xl border border-cyan-800/40">
+                {csvStatusMessage}
               </div>
-            </form>
+            )}
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setIsCsvImportOpen(false)}
+                className="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white bg-slate-800"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={handleImportStudentsCsv}
+                className="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-500"
+              >
+                Import Accounts
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* MODAL: Reset Password */}
+      {/* Reset Student Password Modal (Existing preserved) */}
       {isResetPassOpen && selectedStudentForPass && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-1">Reset Password</h3>
-            <p className="text-xs text-slate-400 mb-4">
-              For contestant: <span className="text-white font-bold">{selectedStudentForPass.displayName}</span> ({selectedStudentForPass.studentId})
+            <h3 className="text-base font-bold text-white mb-1">Reset Password</h3>
+            <p className="text-xs text-slate-400 mb-4 font-mono">
+              For: {selectedStudentForPass.displayName} ({selectedStudentForPass.studentId})
             </p>
-
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div>
-                <label className="text-xs font-mono text-slate-400 block mb-1">New Password (min 6 chars)</label>
+                <label className="block text-xs font-mono text-slate-400 mb-1">New Password</label>
                 <input
                   type="password"
                   required
-                  minLength={6}
                   value={newPassInput}
                   onChange={e => setNewPassInput(e.target.value)}
-                  placeholder="Enter new password"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-500"
-                  autoFocus
+                  placeholder="Min 6 characters"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono outline-none"
                 />
               </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+              <div className="flex gap-2 justify-end">
                 <button
                   type="button"
                   onClick={() => setIsResetPassOpen(false)}
-                  className="px-4 py-2 text-xs text-slate-400 hover:text-white"
+                  className="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white bg-slate-800"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-500 rounded-xl shadow-md cursor-pointer"
+                  className="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-500"
                 >
-                  Save New Password
+                  Save Password
                 </button>
               </div>
             </form>
@@ -1246,49 +2131,48 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL: Create Session */}
+      {/* Create New Session Modal (Existing preserved) */}
       {isNewSessionOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 className="text-lg font-bold text-white mb-2">Create Quiz Session</h3>
-            <form onSubmit={handleCreateSession} className="space-y-3">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-white mb-4">Create New Session</h3>
+            <form onSubmit={handleCreateSession} className="space-y-4">
               <div>
-                <label className="text-xs font-mono text-slate-400 block mb-1">Session Title</label>
+                <label className="block text-xs font-mono text-slate-400 mb-1">Session Title</label>
                 <input
                   type="text"
                   required
                   value={newSessionTitle}
                   onChange={e => setNewSessionTitle(e.target.value)}
-                  placeholder="e.g. Annual CS Quiz Finals"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white outline-none focus:border-cyan-500"
+                  placeholder="e.g. Finals Round 2026"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
                 />
               </div>
-
               <div>
-                <label className="text-xs font-mono text-slate-400 block mb-1">Custom Access PIN (Optional)</label>
+                <label className="block text-xs font-mono text-slate-400 mb-1">
+                  Custom Code (Optional)
+                </label>
                 <input
                   type="text"
                   value={newSessionCode}
                   onChange={e => setNewSessionCode(e.target.value.toUpperCase())}
-                  placeholder="Leave empty for auto PIN (e.g. QB4921)"
-                  maxLength={8}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono uppercase outline-none focus:border-cyan-500"
+                  placeholder="e.g. BUZZ99"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono uppercase"
                 />
               </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <div className="flex gap-2 justify-end pt-2">
                 <button
                   type="button"
                   onClick={() => setIsNewSessionOpen(false)}
-                  className="px-4 py-2 text-xs text-slate-400 hover:text-white"
+                  className="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-white bg-slate-800"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-500 rounded-xl shadow-md cursor-pointer"
+                  className="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-500"
                 >
-                  Start Session
+                  Create
                 </button>
               </div>
             </form>

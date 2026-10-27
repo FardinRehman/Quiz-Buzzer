@@ -41,6 +41,8 @@ function getInitialMockDb(): DatabaseSchema {
           roundNumber: 1,
           questionText: 'What algorithm is primarily used in distributed consensus engines like Raft and Paxos?',
           status: 'IDLE',
+          contestants: [],
+          activeContestantIndex: -1,
           winnerUid: null,
           winnerStudentId: null,
           winnerNameSnapshot: null,
@@ -394,7 +396,7 @@ export function initBrowserEngine() {
             ? {
                 name: round.winnerNameSnapshot,
                 studentId: round.winnerStudentId || '',
-                latencyMs: round.winnerLatencyMs,
+                latencyMs: round.winnerLatencyMs ?? null,
               }
             : undefined,
         };
@@ -417,6 +419,8 @@ export function initBrowserEngine() {
           roundNumber: Object.keys(session.rounds).length + 1,
           questionText: body.questionText || '',
           status: 'IDLE',
+          contestants: [],
+          activeContestantIndex: -1,
           winnerUid: null,
           winnerStudentId: null,
           winnerNameSnapshot: null,
@@ -430,15 +434,19 @@ export function initBrowserEngine() {
         session.currentRoundId = newRId;
       }
 
-      if (body.questionText) round.questionText = body.questionText;
-      round.status = 'OPEN';
-      round.roundOpenedAt = Date.now();
-      round.winnerUid = null;
-      round.winnerNameSnapshot = null;
-      round.winnerStudentId = null;
-      round.winnerAcceptedAt = null;
-      round.winnerLatencyMs = null;
-      round.attempts = [];
+      if (round) {
+        if (body.questionText) round.questionText = body.questionText;
+        round.status = 'OPEN';
+        round.roundOpenedAt = Date.now();
+        round.winnerUid = null;
+        round.winnerNameSnapshot = null;
+        round.winnerStudentId = null;
+        round.winnerAcceptedAt = null;
+        round.winnerLatencyMs = null;
+        round.attempts = [];
+        round.contestants = [];
+        round.activeContestantIndex = -1;
+      }
 
       saveDb(db);
       broadcast('round_opened', { round });
@@ -482,6 +490,8 @@ export function initBrowserEngine() {
         roundNumber: nextNum,
         questionText: body.questionText || '',
         status: 'OPEN',
+        contestants: [],
+        activeContestantIndex: -1,
         winnerUid: null,
         winnerStudentId: null,
         winnerNameSnapshot: null,
@@ -594,6 +604,8 @@ export function initBrowserEngine() {
             roundNumber: 1,
             questionText: 'Round 1 Question',
             status: 'IDLE',
+            contestants: [],
+            activeContestantIndex: -1,
             winnerUid: null,
             winnerStudentId: null,
             winnerNameSnapshot: null,

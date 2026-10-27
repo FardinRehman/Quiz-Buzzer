@@ -6,13 +6,26 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import type { UserProfile, QuizSession, Round, BuzzAttempt, BuzzResponse } from './src/types/quiz.js';
+import { validateAndParseQuestionsCSV } from './src/utils/csv.js';
+import type {
+  UserProfile,
+  QuizSession,
+  Round,
+  BuzzAttempt,
+  BuzzResponse,
+  QuestionBankItem,
+  StudentScoreSummary,
+  ScoreLedgerEntry,
+  LeaderboardEntry,
+  Contestant,
+} from './src/types/quiz.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+const SECONDARY_PORT = Number(process.env.SECONDARY_PORT) || 3001;
 const DATA_DIR = path.resolve(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'quickbuzz-db.json');
 
@@ -41,6 +54,10 @@ interface DatabaseSchema {
   users: Record<string, UserProfile & { passwordHash: string; salt: string }>;
   sessions: Record<string, QuizSession>;
   authTokens: Record<string, string>; // token -> uid
+  questionBank: Record<string, QuestionBankItem>; // id -> question and protected correctAnswer
+  studentScores: Record<string, StudentScoreSummary>; // uid -> private score and activity
+  scoreLedger: Record<string, ScoreLedgerEntry>; // entryId -> audit log
+  publicLeaderboard: Record<string, LeaderboardEntry>; // uid -> public ranking
 }
 
 function hashPassword(password: string, salt: string): string {
@@ -84,8 +101,13 @@ function getInitialDatabase(): DatabaseSchema {
         [initialRoundId]: {
           roundId: initialRoundId,
           roundNumber: 1,
+          questionId: 'q_seed_1',
           questionText: 'Which computer scientist is widely considered the father of theoretical computer science and artificial intelligence?',
+          correctAnswer: 'Alan Turing',
+          isAnswerRevealed: false,
           status: 'IDLE',
+          contestants: [],
+          activeContestantIndex: -1,
           winnerUid: null,
           winnerStudentId: null,
           winnerNameSnapshot: null,
@@ -100,10 +122,52 @@ function getInitialDatabase(): DatabaseSchema {
     },
   };
 
+  const initialQuestionBank: DatabaseSchema['questionBank'] = {
+    q_seed_1: {
+      id: 'q_seed_1',
+      question: 'Which computer scientist is widely considered the father of theoretical computer science and artificial intelligence?',
+      correctAnswer: 'Alan Turing',
+      importedAt: new Date().toISOString(),
+      usedInRoundId: null,
+    },
+    q_seed_2: {
+      id: 'q_seed_2',
+      question: 'What is the capital of Karnataka?',
+      correctAnswer: 'Bengaluru',
+      importedAt: new Date().toISOString(),
+      usedInRoundId: null,
+    },
+    q_seed_3: {
+      id: 'q_seed_3',
+      question: 'Which language is used to build React applications?',
+      correctAnswer: 'JavaScript',
+      importedAt: new Date().toISOString(),
+      usedInRoundId: null,
+    },
+    q_seed_4: {
+      id: 'q_seed_4',
+      question: 'What does CPU stand for?',
+      correctAnswer: 'Central Processing Unit',
+      importedAt: new Date().toISOString(),
+      usedInRoundId: null,
+    },
+    q_seed_5: {
+      id: 'q_seed_5',
+      question: 'Which protocol provides secure web communication?',
+      correctAnswer: 'HTTPS',
+      importedAt: new Date().toISOString(),
+      usedInRoundId: null,
+    },
+  };
+
   return {
     users: initialUsers,
     sessions: initialSessions,
     authTokens: {},
+    questionBank: initialQuestionBank,
+    studentScores: {},
+    scoreLedger: {},
+    publicLeaderboard: {},
   };
 }
 
@@ -123,6 +187,14 @@ if (fs.existsSync(DB_FILE)) {
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 }
 
+// Ensure all new collections exist in loaded db
+if (!db.questionBank || Object.keys(db.questionBank).length === 0) {
+  db.questionBank = getInitialDatabase().questionBank;
+}
+if (!db.studentScores) db.studentScores = {};
+if (!db.scoreLedger) db.scoreLedger = {};
+if (!db.publicLeaderboard) db.publicLeaderboard = {};
+
 // Ensure root admin always has the specified credentials
 const adminUser = Object.values(db.users).find(u => u.role === 'admin') || db.users['admin_root_1'];
 if (adminUser) {
@@ -141,6 +213,59 @@ function persistDb() {
   }
 }
 
+// Deterministic Leaderboard Ranking
+function recomputeLeaderboardRanks(): LeaderboardEntry[] {
+  const entries = Object.values(db.publicLeaderboard);
+  // Sort descending by totalCrypto, tie-break by earliest lastAwardedAt timestamp, then correct count
+  entries.sort((a, b) => {
+    if (b.totalCrypto !== a.totalCrypto) {
+      return b.totalCrypto - a.totalCrypto;
+    }
+    if (a.lastAwardedAt !== b.lastAwardedAt) {
+      return a.lastAwardedAt - b.lastAwardedAt; // earlier timestamp wins tie
+    }
+    if (b.correctAnswersCount !== a.correctAnswersCount) {
+      return b.correctAnswersCount - a.correctAnswersCount;
+    }
+    return a.displayName.localeCompare(b.displayName);
+  });
+
+  entries.forEach((e, idx) => {
+    e.rank = idx + 1;
+    db.publicLeaderboard[e.uid] = e;
+  });
+
+  return entries;
+}
+
+function getLeaderboardList(): LeaderboardEntry[] {
+  return recomputeLeaderboardRanks();
+}
+
+// Sanitization: Strip protected correctAnswer for student clients
+function sanitizeRoundForClient(round: Round | null | undefined, isAdmin: boolean): Round | null {
+  if (!round) return null;
+  if (isAdmin || round.isAnswerRevealed) {
+    return round;
+  }
+  const { correctAnswer: _, ...safeRound } = round;
+  return safeRound as Round;
+}
+
+function sanitizeSessionForClient(session: QuizSession | null | undefined, isAdmin: boolean): QuizSession | null {
+  if (!session) return null;
+  if (isAdmin) return session;
+
+  const sanitizedRounds: Record<string, Round> = {};
+  for (const [rId, r] of Object.entries(session.rounds)) {
+    sanitizedRounds[rId] = sanitizeRoundForClient(r, false)!;
+  }
+  return {
+    ...session,
+    rounds: sanitizedRounds,
+  };
+}
+
 // SSE Clients for Real-time push
 interface SSEClient {
   id: string;
@@ -153,9 +278,39 @@ interface SSEClient {
 const sseClients = new Map<string, SSEClient>();
 
 function broadcastToSession(sessionId: string, eventName: string, data: unknown) {
-  const payload = `event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const client of sseClients.values()) {
     if (client.sessionId === sessionId) {
+      try {
+        let payloadData = data;
+        // Strip sensitive correct answers from student SSE broadcasts
+        if (client.role !== 'admin' && typeof data === 'object' && data !== null) {
+          const d = data as Record<string, unknown>;
+          if (d.round) {
+            payloadData = {
+              ...d,
+              round: sanitizeRoundForClient(d.round as Round, false),
+            };
+          } else if (d.session) {
+            payloadData = {
+              ...d,
+              session: sanitizeSessionForClient(d.session as QuizSession, false),
+              currentRound: sanitizeRoundForClient(d.currentRound as Round, false),
+            };
+          }
+        }
+        const payload = `event: ${eventName}\ndata: ${JSON.stringify(payloadData)}\n\n`;
+        client.res.write(payload);
+      } catch {
+        sseClients.delete(client.id);
+      }
+    }
+  }
+}
+
+function broadcastToUser(uid: string, eventName: string, data: unknown) {
+  const payload = `event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const client of sseClients.values()) {
+    if (client.uid === uid) {
       try {
         client.res.write(payload);
       } catch {
@@ -436,10 +591,15 @@ app.get('/api/live/stream', (req, res) => {
     broadcastToSession(sessionId, 'participant_update', session.participants);
   }
 
-  // Send initial state snapshot immediately
+  // Send initial state snapshot immediately (sanitized so students never receive protected answers)
+  const isAdmin = user.role === 'admin';
   const initialPayload = {
-    session,
-    currentRound: session.currentRoundId ? session.rounds[session.currentRoundId] : null,
+    session: sanitizeSessionForClient(session, isAdmin),
+    currentRound: sanitizeRoundForClient(
+      session.currentRoundId ? session.rounds[session.currentRoundId] : null,
+      isAdmin
+    ),
+    leaderboard: getLeaderboardList(),
     serverTime: Date.now(),
   };
   res.write(`event: state\ndata: ${JSON.stringify(initialPayload)}\n\n`);
@@ -510,21 +670,45 @@ app.post(
         return { statusCode: 404, payload: { error: 'Round not found', reason: 'ROUND_NOT_OPEN' } };
       }
 
-      // 1. Check if a winner was already accepted in this round (TOO LATE)
-      if (round.winnerUid !== null) {
+      if (!round.contestants) round.contestants = [];
+
+      // 1. Prevent duplicate submissions from the same student for the same question
+      const alreadyBuzzed = round.attempts.some(a => a.uid === student.uid);
+      if (alreadyBuzzed) {
+        const existingContestant = round.contestants.find(c => c.uid === student.uid);
+        return {
+          statusCode: 200,
+          payload: {
+            accepted: false,
+            reason: 'ALREADY_BUZZED',
+            position: existingContestant?.position || null,
+            latencyMs: 0,
+            contestants: round.contestants,
+          },
+        };
+      }
+
+      // 2. Reject buzzes submitted before activation, after buzzer closes, or after max 2 contestants accepted
+      const isAccepting =
+        (round.status === 'OPEN' ||
+          round.status === 'QUESTION_ACTIVE' ||
+          round.status === 'AWAITING_ANSWER_EVALUATION') &&
+        round.contestants.length < 2;
+
+      if (!isAccepting) {
         const latencyMs = round.roundOpenedAt ? Math.max(1, now - round.roundOpenedAt) : 0;
         const attempt: BuzzAttempt = {
           uid: student.uid,
           studentId: student.studentId || 'N/A',
           displayName: student.displayName,
           submittedAt: now,
-          status: 'REJECTED_TOO_LATE',
+          status: round.contestants.length >= 2 ? 'REJECTED_TOO_LATE' : 'REJECTED_ROUND_CLOSED',
           latencyMs,
+          position: null,
         };
         round.attempts.push(attempt);
         persistDb();
 
-        // Broadcast the new attempt to admin
         broadcastToSession(sessionId, 'round_attempts_update', {
           roundId,
           attempts: round.attempts,
@@ -532,82 +716,167 @@ app.post(
 
         const response: BuzzResponse = {
           accepted: false,
-          reason: 'TOO_LATE',
+          reason: round.contestants.length >= 2 ? 'TOO_LATE' : 'ROUND_NOT_OPEN',
           latencyMs,
+          contestants: round.contestants,
           winner: {
-            name: round.winnerNameSnapshot || 'Another Student',
-            studentId: round.winnerStudentId || 'N/A',
-            latencyMs: round.winnerLatencyMs,
+            name: round.contestants[0]?.displayName || round.winnerNameSnapshot || 'Another Contestant',
+            studentId: round.contestants[0]?.studentId || round.winnerStudentId || 'N/A',
+            latencyMs: round.contestants[0]?.latencyMs ?? round.winnerLatencyMs,
           },
         };
         return { statusCode: 200, payload: response };
       }
 
-      // 2. Check if round is open
-      if (round.status !== 'OPEN') {
+      const latencyMs = round.roundOpenedAt ? Math.max(1, now - round.roundOpenedAt) : 0;
+
+      // Authoritative First Contestant
+      if (round.contestants.length === 0) {
+        const contestant1: Contestant = {
+          uid: student.uid,
+          studentId: student.studentId || 'N/A',
+          displayName: student.displayName,
+          position: 1,
+          buzzedAt: now,
+          latencyMs,
+          evaluation: 'pending',
+        };
+        round.contestants.push(contestant1);
+        round.activeContestantIndex = 0;
+        round.status = 'AWAITING_ANSWER_EVALUATION';
+
+        // Legacy compatibility fields
+        round.winnerUid = student.uid;
+        round.winnerStudentId = student.studentId || 'N/A';
+        round.winnerNameSnapshot = student.displayName;
+        round.winnerAcceptedAt = now;
+        round.winnerLatencyMs = latencyMs;
+
         const attempt: BuzzAttempt = {
           uid: student.uid,
           studentId: student.studentId || 'N/A',
           displayName: student.displayName,
           submittedAt: now,
-          status: 'REJECTED_ROUND_CLOSED',
-          latencyMs: round.roundOpenedAt ? Math.max(1, now - round.roundOpenedAt) : 0,
+          status: 'ACCEPTED_FIRST',
+          latencyMs,
+          position: 1,
         };
         round.attempts.push(attempt);
         persistDb();
 
+        // Broadcast to session
+        broadcastToSession(sessionId, 'round_buzz_accepted', {
+          roundId,
+          round,
+          contestant: contestant1,
+          position: 1,
+        });
+
+        // Legacy event for backward-compatibility with existing hooks
+        broadcastToSession(sessionId, 'round_winner', {
+          roundId,
+          round,
+          winner: {
+            uid: student.uid,
+            name: student.displayName,
+            studentId: student.studentId,
+            acceptedAt: now,
+            latencyMs,
+          },
+        });
+
         const response: BuzzResponse = {
-          accepted: false,
-          reason: 'ROUND_NOT_OPEN',
+          accepted: true,
+          position: 1,
+          reason: 'FIRST_CONTESTANT',
+          latencyMs,
+          contestants: round.contestants,
+          winner: {
+            name: student.displayName,
+            studentId: student.studentId || 'N/A',
+            latencyMs,
+          },
         };
         return { statusCode: 200, payload: response };
       }
 
-      // ATOMIC WINNER ACCEPTANCE: First valid student claims the win!
-      const latencyMs = round.roundOpenedAt ? Math.max(1, now - round.roundOpenedAt) : 0;
-      round.winnerUid = student.uid;
-      round.winnerStudentId = student.studentId || 'N/A';
-      round.winnerNameSnapshot = student.displayName;
-      round.winnerAcceptedAt = now;
-      round.winnerLatencyMs = latencyMs;
-      round.status = 'WINNER_LOCKED';
+      // Authoritative Second Contestant
+      if (round.contestants.length === 1) {
+        const contestant2: Contestant = {
+          uid: student.uid,
+          studentId: student.studentId || 'N/A',
+          displayName: student.displayName,
+          position: 2,
+          buzzedAt: now,
+          latencyMs,
+          evaluation: 'pending',
+        };
+        round.contestants.push(contestant2);
 
-      const winningAttempt: BuzzAttempt = {
+        // Immediately lock further buzzer attempts once 2 contestants are recorded!
+        round.status = 'BUZZER_LOCKED';
+
+        const attempt: BuzzAttempt = {
+          uid: student.uid,
+          studentId: student.studentId || 'N/A',
+          displayName: student.displayName,
+          submittedAt: now,
+          status: 'ACCEPTED_SECOND',
+          latencyMs,
+          position: 2,
+        };
+        round.attempts.push(attempt);
+        persistDb();
+
+        broadcastToSession(sessionId, 'round_buzz_accepted', {
+          roundId,
+          round,
+          contestant: contestant2,
+          position: 2,
+        });
+
+        const response: BuzzResponse = {
+          accepted: true,
+          position: 2,
+          reason: 'SECOND_CONTESTANT',
+          latencyMs,
+          contestants: round.contestants,
+          winner: {
+            name: round.contestants[0].displayName,
+            studentId: round.contestants[0].studentId,
+            latencyMs: round.contestants[0].latencyMs,
+          },
+        };
+        return { statusCode: 200, payload: response };
+      }
+
+      // 3rd or later attempt rejected as TOO_LATE
+      const attempt: BuzzAttempt = {
         uid: student.uid,
         studentId: student.studentId || 'N/A',
         displayName: student.displayName,
         submittedAt: now,
-        status: 'ACCEPTED_WINNER',
+        status: 'REJECTED_TOO_LATE',
         latencyMs,
+        position: null,
       };
-      round.attempts.push(winningAttempt);
+      round.attempts.push(attempt);
       persistDb();
 
-      // Immediately broadcast winning update to ALL clients in session
-      broadcastToSession(sessionId, 'round_winner', {
+      broadcastToSession(sessionId, 'round_attempts_update', {
         roundId,
-        round,
-        winner: {
-          uid: student.uid,
-          name: student.displayName,
-          studentId: student.studentId,
-          acceptedAt: now,
-          latencyMs,
-        },
+        attempts: round.attempts,
       });
 
-      const response: BuzzResponse = {
-        accepted: true,
-        reason: 'WINNER',
-        latencyMs,
-        winner: {
-          name: student.displayName,
-          studentId: student.studentId || 'N/A',
+      return {
+        statusCode: 200,
+        payload: {
+          accepted: false,
+          reason: 'TOO_LATE',
           latencyMs,
+          contestants: round.contestants,
         },
       };
-
-      return { statusCode: 200, payload: response };
     });
 
     res.status(result.statusCode).json(result.payload);
@@ -615,18 +884,575 @@ app.post(
 );
 
 /* ==========================================================================
+   ADMIN ANSWER EVALUATION & CRYPTO SCORING WORKFLOW
+   ========================================================================== */
+
+// Admin evaluates answer: Mark Answer Correct (+1000 for 1st, +700 for 2nd) or Wrong (0 pts)
+app.post(
+  '/api/admin/sessions/:sessionId/rounds/:roundId/evaluate',
+  authMiddleware,
+  adminOnly,
+  async (req, res) => {
+    const { sessionId, roundId } = req.params;
+    const { contestantIndex, result } = req.body;
+
+    if (contestantIndex !== 0 && contestantIndex !== 1) {
+      res.status(400).json({ error: 'contestantIndex must be 0 (first contestant) or 1 (second contestant)' });
+      return;
+    }
+
+    if (result !== 'correct' && result !== 'wrong') {
+      res.status(400).json({ error: 'result must be "correct" or "wrong"' });
+      return;
+    }
+
+    const outcome = await runInRoundLock(roundId, () => {
+      const session = db.sessions[sessionId];
+      if (!session) return { statusCode: 404, payload: { error: 'Session not found' } };
+      const round = session.rounds[roundId];
+      if (!round) return { statusCode: 404, payload: { error: 'Round not found' } };
+
+      if (!round.contestants || !round.contestants[contestantIndex]) {
+        return { statusCode: 400, payload: { error: `No contestant found at position ${contestantIndex + 1}` } };
+      }
+
+      const contestant = round.contestants[contestantIndex];
+
+      // Idempotency: Prevent duplicate evaluation on double clicks or page refresh
+      if (contestant.evaluation && contestant.evaluation !== 'pending') {
+        return {
+          statusCode: 200,
+          payload: {
+            success: true,
+            alreadyEvaluated: true,
+            round,
+            evaluatedContestant: contestant,
+            pointsAwarded: contestant.pointsAwarded || 0,
+          },
+        };
+      }
+
+      const now = Date.now();
+      contestant.evaluatedAt = now;
+      contestant.evaluation = result;
+
+      // Crypto Scoring Rules:
+      // First contestant correct: 1,000 Crypto
+      // Second contestant correct: 700 Crypto
+      // Wrong answer: 0 Crypto
+      const points = result === 'correct' ? (contestant.position === 1 ? 1000 : 700) : 0;
+      contestant.pointsAwarded = points;
+
+      const uid = contestant.uid;
+      if (!db.studentScores[uid]) {
+        db.studentScores[uid] = {
+          uid,
+          displayName: contestant.displayName,
+          studentId: contestant.studentId,
+          totalCrypto: 0,
+          correctAnswersCount: 0,
+          firstBuzzerWins: 0,
+          secondBuzzerWins: 0,
+          lastAwardedAt: now,
+          recentActivity: [],
+        };
+      }
+
+      const studentScore = db.studentScores[uid];
+      studentScore.displayName = contestant.displayName;
+      studentScore.studentId = contestant.studentId;
+
+      if (result === 'correct') {
+        studentScore.totalCrypto += points;
+        studentScore.correctAnswersCount += 1;
+        if (contestant.position === 1) {
+          studentScore.firstBuzzerWins += 1;
+        } else {
+          studentScore.secondBuzzerWins += 1;
+        }
+        studentScore.lastAwardedAt = now;
+      }
+
+      // Add to student's private personal activity history
+      studentScore.recentActivity.unshift({
+        questionId: round.questionId || roundId,
+        questionText: round.questionText || '',
+        roundNumber: round.roundNumber,
+        position: contestant.position,
+        points,
+        result,
+        timestamp: now,
+      });
+
+      if (studentScore.recentActivity.length > 50) {
+        studentScore.recentActivity = studentScore.recentActivity.slice(0, 50);
+      }
+
+      // Audit Ledger Record
+      const entryId = `ledger_${now}_${crypto.randomBytes(3).toString('hex')}`;
+      const reason =
+        result === 'correct'
+          ? contestant.position === 1
+            ? 'FIRST_CONTESTANT_CORRECT'
+            : 'SECOND_CONTESTANT_CORRECT'
+          : 'INCORRECT';
+
+      db.scoreLedger[entryId] = {
+        entryId,
+        sessionId,
+        roundId,
+        questionId: round.questionId || undefined,
+        uid,
+        studentId: contestant.studentId,
+        displayName: contestant.displayName,
+        position: contestant.position,
+        points,
+        timestamp: now,
+        reason,
+      };
+
+      // Update Public Leaderboard
+      db.publicLeaderboard[uid] = {
+        rank: 1,
+        uid,
+        displayName: contestant.displayName,
+        studentId: contestant.studentId,
+        totalCrypto: studentScore.totalCrypto,
+        correctAnswersCount: studentScore.correctAnswersCount,
+        firstBuzzerWins: studentScore.firstBuzzerWins,
+        secondBuzzerWins: studentScore.secondBuzzerWins,
+        lastAwardedAt: studentScore.lastAwardedAt,
+      };
+
+      recomputeLeaderboardRanks();
+
+      // State transitions:
+      if (contestant.position === 1) {
+        if (result === 'correct') {
+          round.status = 'ANSWER_CORRECT';
+          round.roundClosedAt = now;
+          round.winnerUid = contestant.uid;
+          round.winnerStudentId = contestant.studentId;
+          round.winnerNameSnapshot = contestant.displayName;
+        } else {
+          // 1st contestant wrong: give 2nd contestant opportunity if one buzzed
+          if (round.contestants.length >= 2) {
+            round.status = 'NEXT_CONTESTANT';
+            round.activeContestantIndex = 1;
+          } else {
+            // No second contestant registered
+            round.status = 'QUESTION_COMPLETED';
+            round.roundClosedAt = now;
+          }
+        }
+      } else {
+        // 2nd contestant evaluated
+        if (result === 'correct') {
+          round.status = 'ANSWER_CORRECT';
+          round.roundClosedAt = now;
+          round.winnerUid = contestant.uid;
+          round.winnerStudentId = contestant.studentId;
+          round.winnerNameSnapshot = contestant.displayName;
+        } else {
+          round.status = 'ANSWER_INCORRECT';
+          round.roundClosedAt = now;
+        }
+      }
+
+      persistDb();
+
+      // Broadcast real-time evaluation updates
+      broadcastToSession(sessionId, 'round_evaluation_update', {
+        roundId,
+        round,
+        evaluatedContestant: contestant,
+        pointsAwarded: points,
+        result,
+      });
+
+      broadcastToSession(sessionId, 'leaderboard_update', getLeaderboardList());
+      broadcastToUser(uid, 'personal_score_update', studentScore);
+
+      return {
+        statusCode: 200,
+        payload: {
+          success: true,
+          round,
+          evaluatedContestant: contestant,
+          pointsAwarded: points,
+        },
+      };
+    });
+
+    res.status(outcome.statusCode).json(outcome.payload);
+  }
+);
+
+// Admin reveals correct answer to all clients
+app.post(
+  '/api/admin/sessions/:sessionId/rounds/:roundId/reveal-answer',
+  authMiddleware,
+  adminOnly,
+  (req, res) => {
+    const { sessionId, roundId } = req.params;
+    const session = db.sessions[sessionId];
+    if (!session) {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+    const round = session.rounds[roundId];
+    if (!round) {
+      res.status(404).json({ error: 'Round not found' });
+      return;
+    }
+
+    round.isAnswerRevealed = true;
+    persistDb();
+
+    broadcastToSession(sessionId, 'answer_revealed', {
+      roundId,
+      correctAnswer: round.correctAnswer,
+    });
+
+    res.json({ success: true, round, correctAnswer: round.correctAnswer });
+  }
+);
+
+// Admin skips current question
+app.post(
+  '/api/admin/sessions/:sessionId/rounds/:roundId/skip',
+  authMiddleware,
+  adminOnly,
+  (req, res) => {
+    const { sessionId, roundId } = req.params;
+    const session = db.sessions[sessionId];
+    if (!session) {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+    const round = session.rounds[roundId];
+    if (!round) {
+      res.status(404).json({ error: 'Round not found' });
+      return;
+    }
+
+    round.status = 'QUESTION_COMPLETED';
+    round.roundClosedAt = Date.now();
+    persistDb();
+
+    broadcastToSession(sessionId, 'round_skipped', { roundId, round });
+    res.json({ success: true, round });
+  }
+);
+
+// Admin pauses active round
+app.post(
+  '/api/admin/sessions/:sessionId/rounds/:roundId/pause',
+  authMiddleware,
+  adminOnly,
+  (req, res) => {
+    const { sessionId, roundId } = req.params;
+    const session = db.sessions[sessionId];
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+    const round = session.rounds[roundId];
+    if (!round) return res.status(404).json({ error: 'Round not found' });
+
+    if (round.status === 'QUESTION_ACTIVE' || round.status === 'OPEN') {
+      round.status = 'BUZZER_LOCKED';
+      persistDb();
+      broadcastToSession(sessionId, 'round_paused', { roundId, round });
+    }
+    res.json({ success: true, round });
+  }
+);
+
+// Admin resumes paused round
+app.post(
+  '/api/admin/sessions/:sessionId/rounds/:roundId/resume',
+  authMiddleware,
+  adminOnly,
+  (req, res) => {
+    const { sessionId, roundId } = req.params;
+    const session = db.sessions[sessionId];
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+    const round = session.rounds[roundId];
+    if (!round) return res.status(404).json({ error: 'Round not found' });
+
+    if (round.status === 'BUZZER_LOCKED' && round.contestants.length < 2) {
+      round.status = 'QUESTION_ACTIVE';
+      persistDb();
+      broadcastToSession(sessionId, 'round_resumed', { roundId, round });
+    }
+    res.json({ success: true, round });
+  }
+);
+
+// Admin ends the round completely
+app.post(
+  '/api/admin/sessions/:sessionId/rounds/:roundId/end',
+  authMiddleware,
+  adminOnly,
+  (req, res) => {
+    const { sessionId, roundId } = req.params;
+    const session = db.sessions[sessionId];
+    if (!session) return res.status(404).json({ error: 'Session not found' });
+    const round = session.rounds[roundId];
+    if (!round) return res.status(404).json({ error: 'Round not found' });
+
+    round.status = 'ROUND_COMPLETED';
+    round.roundClosedAt = Date.now();
+    persistDb();
+
+    broadcastToSession(sessionId, 'round_ended', { roundId, round });
+    res.json({ success: true, round });
+  }
+);
+
+// Admin selects random question from question bank and starts round
+app.post(
+  '/api/admin/sessions/:sessionId/rounds/start-random',
+  authMiddleware,
+  adminOnly,
+  (req, res) => {
+    const { sessionId } = req.params;
+    const session = db.sessions[sessionId];
+    if (!session) {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+
+    // Filter questions that have not yet been used
+    const unusedQuestions = Object.values(db.questionBank).filter(q => !q.usedInRoundId);
+
+    if (unusedQuestions.length === 0) {
+      res.status(400).json({
+        error: 'NO_QUESTIONS_AVAILABLE',
+        message: 'All questions in the Question Bank have been used. Please upload more questions or reset the question sequence.',
+        totalQuestions: Object.keys(db.questionBank).length,
+      });
+      return;
+    }
+
+    // Pick one unused question randomly
+    const randomIndex = Math.floor(Math.random() * unusedQuestions.length);
+    const chosenQuestion = unusedQuestions[randomIndex];
+
+    const nextNumber = Object.keys(session.rounds).length + 1;
+    const newRoundId = `rnd_${Date.now()}_${nextNumber}`;
+
+    // Mark question as used
+    chosenQuestion.usedInRoundId = newRoundId;
+
+    const newRound: Round = {
+      roundId: newRoundId,
+      roundNumber: nextNumber,
+      questionId: chosenQuestion.id,
+      questionText: chosenQuestion.question,
+      correctAnswer: chosenQuestion.correctAnswer,
+      isAnswerRevealed: false,
+      status: 'QUESTION_ACTIVE',
+      contestants: [],
+      activeContestantIndex: -1,
+      roundOpenedAt: Date.now(),
+      roundClosedAt: null,
+      attempts: [],
+      winnerUid: null,
+      winnerStudentId: null,
+      winnerNameSnapshot: null,
+      winnerAcceptedAt: null,
+      winnerLatencyMs: null,
+    };
+
+    session.rounds[newRoundId] = newRound;
+    session.currentRoundId = newRoundId;
+    persistDb();
+
+    // Broadcast to all participants (students receive sanitized round with protected correctAnswer stripped)
+    broadcastToSession(sessionId, 'round_opened', {
+      roundId: newRoundId,
+      round: newRound,
+    });
+
+    res.status(200).json({
+      success: true,
+      round: newRound,
+      remainingUnusedQuestions: unusedQuestions.length - 1,
+    });
+  }
+);
+
+/* ==========================================================================
+   QUESTION BANK MANAGEMENT ROUTES (ADMIN ONLY)
+   ========================================================================== */
+
+// Preview CSV before import
+app.post('/api/admin/questions/preview-csv', authMiddleware, adminOnly, (req, res) => {
+  const { csvContent } = req.body;
+  if (!csvContent || typeof csvContent !== 'string') {
+    res.status(400).json({ error: 'csvContent string is required' });
+    return;
+  }
+
+  const parseResult = validateAndParseQuestionsCSV(csvContent);
+  res.json({
+    valid: parseResult.valid,
+    totalDetected: parseResult.totalRows,
+    validCount: parseResult.validQuestions.length,
+    invalidCount: parseResult.errors.length,
+    errors: parseResult.errors,
+    preview: parseResult.validQuestions.slice(0, 10), // first 10 for preview
+  });
+});
+
+// Import CSV questions into authoritative question bank
+app.post('/api/admin/questions/import-csv', authMiddleware, adminOnly, (req, res) => {
+  const { csvContent } = req.body;
+  if (!csvContent || typeof csvContent !== 'string') {
+    res.status(400).json({ error: 'csvContent string is required' });
+    return;
+  }
+
+  const parseResult = validateAndParseQuestionsCSV(csvContent);
+  if (parseResult.validQuestions.length === 0) {
+    res.status(400).json({
+      error: 'No valid questions found to import.',
+      errors: parseResult.errors,
+    });
+    return;
+  }
+
+  let importedCount = 0;
+  parseResult.validQuestions.forEach((q, idx) => {
+    const qId = `q_${Date.now()}_${idx}_${crypto.randomBytes(2).toString('hex')}`;
+    db.questionBank[qId] = {
+      id: qId,
+      question: q.question,
+      correctAnswer: q.correctAnswer,
+      importedAt: new Date().toISOString(),
+      usedInRoundId: null,
+    };
+    importedCount++;
+  });
+
+  persistDb();
+
+  const totalQuestions = Object.keys(db.questionBank).length;
+  const availableCount = Object.values(db.questionBank).filter(q => !q.usedInRoundId).length;
+
+  res.status(201).json({
+    success: true,
+    importedCount,
+    totalQuestions,
+    availableCount,
+    errors: parseResult.errors,
+  });
+});
+
+// List questions in Question Bank
+app.get('/api/admin/questions', authMiddleware, adminOnly, (_req, res) => {
+  const questions = Object.values(db.questionBank).reverse();
+  const availableCount = questions.filter(q => !q.usedInRoundId).length;
+  res.json({
+    questions,
+    total: questions.length,
+    availableCount,
+    usedCount: questions.length - availableCount,
+  });
+});
+
+// Delete single question
+app.delete('/api/admin/questions/:questionId', authMiddleware, adminOnly, (req, res) => {
+  const { questionId } = req.params;
+  if (!db.questionBank[questionId]) {
+    res.status(404).json({ error: 'Question not found' });
+    return;
+  }
+
+  delete db.questionBank[questionId];
+  persistDb();
+
+  res.json({ success: true, remaining: Object.keys(db.questionBank).length });
+});
+
+// Clear entire question bank
+app.post('/api/admin/questions/clear', authMiddleware, adminOnly, (_req, res) => {
+  db.questionBank = {};
+  persistDb();
+  res.json({ success: true, message: 'Question bank cleared.' });
+});
+
+// Reset question sequence (marks all as unused without modifying student scores)
+app.post('/api/admin/questions/reset-sequence', authMiddleware, adminOnly, (_req, res) => {
+  for (const q of Object.values(db.questionBank)) {
+    q.usedInRoundId = null;
+  }
+  persistDb();
+  res.json({
+    success: true,
+    message: 'Question sequence reset. All questions are now eligible for rounds.',
+    availableCount: Object.keys(db.questionBank).length,
+  });
+});
+
+/* ==========================================================================
+   PUBLIC LEADERBOARD & PRIVATE STUDENT SCORE ROUTES
+   ========================================================================== */
+
+// Public Leaderboard (Rank, Name, Total Crypto, Correct Answers, 1st Wins, 2nd Wins)
+app.get('/api/leaderboard', authMiddleware, (_req, res) => {
+  res.json({ leaderboard: getLeaderboardList() });
+});
+
+// Student's Private Personal Score & Activity History (Protected by authenticated UID)
+app.get('/api/students/me/score', authMiddleware, studentOnly, (req: Request & { user?: UserProfile }, res: Response) => {
+  const uid = req.user!.uid;
+  let score = db.studentScores[uid];
+  if (!score) {
+    score = {
+      uid,
+      displayName: req.user!.displayName,
+      studentId: req.user!.studentId || 'N/A',
+      totalCrypto: 0,
+      correctAnswersCount: 0,
+      firstBuzzerWins: 0,
+      secondBuzzerWins: 0,
+      lastAwardedAt: Date.now(),
+      recentActivity: [],
+    };
+    db.studentScores[uid] = score;
+    persistDb();
+  }
+  res.json({ score });
+});
+
+// Admin view of all student scores & audit ledger
+app.get('/api/admin/scores', authMiddleware, adminOnly, (_req, res) => {
+  res.json({
+    studentScores: Object.values(db.studentScores),
+    ledger: Object.values(db.scoreLedger).reverse(),
+    leaderboard: getLeaderboardList(),
+  });
+});
+
+
+/* ==========================================================================
    SESSION & ROUND CONTROL ROUTES
    ========================================================================== */
 
-// Get current session state
-app.get('/api/sessions/:sessionId', authMiddleware, (req, res) => {
+// Get current session state (sanitized for students)
+app.get('/api/sessions/:sessionId', authMiddleware, (req: Request & { user?: UserProfile }, res: Response) => {
   const session = db.sessions[req.params.sessionId];
   if (!session) {
     res.status(404).json({ error: 'Session not found' });
     return;
   }
+  const isAdmin = req.user?.role === 'admin';
   const currentRound = session.currentRoundId ? session.rounds[session.currentRoundId] : null;
-  res.json({ session, currentRound });
+  res.json({
+    session: sanitizeSessionForClient(session, isAdmin),
+    currentRound: sanitizeRoundForClient(currentRound, isAdmin),
+    leaderboard: getLeaderboardList(),
+  });
 });
 
 // Join session by session code
@@ -700,6 +1526,8 @@ app.post('/api/admin/sessions', authMiddleware, adminOnly, (req: Request & { use
     roundNumber: 1,
     questionText: '',
     status: 'IDLE',
+    contestants: [],
+    activeContestantIndex: -1,
     winnerUid: null,
     winnerStudentId: null,
     winnerNameSnapshot: null,
@@ -775,6 +1603,8 @@ app.post('/api/admin/sessions/:sessionId/rounds/open', authMiddleware, adminOnly
       roundNumber: nextNum,
       questionText: '',
       status: 'IDLE',
+      contestants: [],
+      activeContestantIndex: -1,
       winnerUid: null,
       winnerStudentId: null,
       winnerNameSnapshot: null,
@@ -859,6 +1689,8 @@ app.post('/api/admin/sessions/:sessionId/rounds/next', authMiddleware, adminOnly
     roundNumber: nextNumber,
     questionText: questionText ? String(questionText) : '',
     status: 'IDLE',
+    contestants: [],
+    activeContestantIndex: -1,
     winnerUid: null,
     winnerStudentId: null,
     winnerNameSnapshot: null,
@@ -1154,9 +1986,25 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 QuickBuzz Server running at http://0.0.0.0:${PORT} [${isDev ? 'development' : 'production'}]`);
+  const serverPrimary = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 QuickBuzz Primary Server running at http://localhost:${PORT} [${isDev ? 'development' : 'production'}]`);
   });
+
+  serverPrimary.on('error', (err: any) => {
+    console.error(`❌ Primary server error on port ${PORT}:`, err.message);
+  });
+
+  if (SECONDARY_PORT && SECONDARY_PORT !== PORT) {
+    const serverSecondary = app.listen(SECONDARY_PORT, '0.0.0.0', () => {
+      console.log(`🚀 QuickBuzz Secondary Server running at http://localhost:${SECONDARY_PORT} [separate browser storage/session]`);
+      console.log(`👉 Primary Port   (Admin Dashboard)   : http://localhost:${PORT}`);
+      console.log(`👉 Secondary Port (Student Dashboard) : http://localhost:${SECONDARY_PORT}`);
+    });
+
+    serverSecondary.on('error', (err: any) => {
+      console.warn(`⚠️ Secondary port ${SECONDARY_PORT} warning:`, err.message);
+    });
+  }
 }
 
 startServer();

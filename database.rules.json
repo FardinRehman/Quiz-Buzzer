@@ -19,8 +19,36 @@
       }
     },
 
+    "questionBank": {
+      // Protected: Question Bank and Answer Keys are strictly accessible by authorized admins only
+      ".read": "auth != null && auth.token.role === 'admin'",
+      ".write": "auth != null && auth.token.role === 'admin'"
+    },
+
+    "studentScores": {
+      "$uid": {
+        // Privacy requirement: each student can only read their own private score & history
+        ".read": "auth != null && (auth.uid === $uid || auth.token.role === 'admin')",
+        // Students MUST NEVER write or modify scores directly
+        ".write": "auth != null && auth.token.role === 'admin'"
+      }
+    },
+
+    "publicLeaderboard": {
+      // Public rankings (total Crypto, rank, wins) are visible to all authenticated contestants
+      ".read": "auth != null",
+      // Only admin or Cloud Function can mutate leaderboard
+      ".write": "auth != null && auth.token.role === 'admin'"
+    },
+
+    "scoreLedger": {
+      // Immutable transaction audit ledger
+      ".read": "auth != null && auth.token.role === 'admin'",
+      ".write": "auth != null && auth.token.role === 'admin'"
+    },
+
     "sessions": {
-      // Authenticated users can list or read sessions
+      // Authenticated contestants can list or read active sessions
       ".read": "auth != null",
 
       "$sessionId": {
@@ -29,18 +57,16 @@
 
         "rounds": {
           "$roundId": {
-            // Authoritative round fields (status, winnerUid, winnerStudentId, winnerAcceptedAt)
-            // MUST NEVER be written directly by student clients. Only admin or trusted Cloud Function.
+            // Correct answer is hidden from student read until isAnswerRevealed is true
+            "correctAnswer": {
+              ".read": "auth != null && (auth.token.role === 'admin' || data.parent().child('isAnswerRevealed').val() === true)"
+            },
+
+            // Contestants array & positions MUST NEVER be written directly by students
+            "contestants": {
+              ".write": "auth != null && auth.token.role === 'admin'"
+            },
             "winnerUid": {
-              ".write": "auth != null && auth.token.role === 'admin'"
-            },
-            "winnerStudentId": {
-              ".write": "auth != null && auth.token.role === 'admin'"
-            },
-            "winnerNameSnapshot": {
-              ".write": "auth != null && auth.token.role === 'admin'"
-            },
-            "winnerAcceptedAt": {
               ".write": "auth != null && auth.token.role === 'admin'"
             },
             "status": {
@@ -49,7 +75,7 @@
 
             "attempts": {
               "$attemptUid": {
-                // Students can only write their own attempt record
+                // Students can only read their own attempt record
                 ".read": "auth != null && (auth.uid === $attemptUid || auth.token.role === 'admin')",
                 // Writes to attempts are strictly mediated through server/Cloud Function
                 ".write": "auth != null && auth.token.role === 'admin'"
