@@ -133,6 +133,7 @@ export const AdminDashboard: React.FC = () => {
   const [isClearingQuestionBank, setIsClearingQuestionBank] = useState<boolean>(false);
   const [isConfirmResetSequenceOpen, setIsConfirmResetSequenceOpen] = useState<boolean>(false);
   const [revealedAnswerIds, setRevealedAnswerIds] = useState<Record<string, boolean>>({});
+  const [isHostAnswerRevealed, setIsHostAnswerRevealed] = useState<boolean>(false);
 
   // New session modal
   const [isNewSessionOpen, setIsNewSessionOpen] = useState(false);
@@ -235,6 +236,11 @@ export const AdminDashboard: React.FC = () => {
     fetchQuestions();
     fetchSessions();
   }, [token]);
+
+  // Reset admin protected answer reveal state whenever the round changes
+  useEffect(() => {
+    setIsHostAnswerRevealed(false);
+  }, [currentRound?.roundId]);
 
   // Handle Question Bank CSV Preview
   const handlePreviewQuestionCsv = (csvContentToPreview: string) => {
@@ -454,6 +460,7 @@ export const AdminDashboard: React.FC = () => {
   // Reveal correct answer to audience/students
   const handleRevealAnswer = async () => {
     try {
+      setIsHostAnswerRevealed(true);
       await revealAnswer();
     } catch (err) {
       console.error('Failed to reveal answer:', err);
@@ -962,34 +969,82 @@ export const AdminDashboard: React.FC = () => {
                 </div>
 
                 {/* Admin-Only Answer Key Box */}
-                {currentRound?.correctAnswer && (
-                  <div className="mt-4 p-3.5 rounded-xl bg-slate-950 border border-emerald-500/30 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <div>
-                        <span className="text-[10px] font-mono text-emerald-400 uppercase font-bold block">
-                          Protected Answer Key (Admin Host Only)
-                        </span>
-                        <span className="text-sm font-semibold text-white">{currentRound.correctAnswer}</span>
+                {currentRound?.correctAnswer && (() => {
+                  const isRevealedForAdmin = Boolean(currentRound.isAnswerRevealed || isHostAnswerRevealed);
+                  return (
+                    <div className="mt-4 p-3.5 rounded-xl bg-slate-950 border border-emerald-500/30 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono text-emerald-400 uppercase font-bold block">
+                              Protected Answer Key (Admin Host Only)
+                            </span>
+                            {isRevealedForAdmin && (
+                              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 font-bold uppercase">
+                                {currentRound.isAnswerRevealed ? 'Publicly Revealed' : 'Revealed to Admin'}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {isRevealedForAdmin ? (
+                              <span className="text-sm font-semibold text-emerald-300 font-mono tracking-wide">
+                                {currentRound.correctAnswer}
+                              </span>
+                            ) : (
+                              <span className="text-sm font-mono text-slate-500 tracking-widest select-none">
+                                ••••••••••••
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setIsHostAnswerRevealed(prev => !prev)}
+                              className="text-slate-400 hover:text-cyan-400 transition-colors p-1 rounded hover:bg-slate-800/60"
+                              title={isRevealedForAdmin ? 'Hide Answer Key' : 'Reveal Answer Key for Admin'}
+                              aria-label={isRevealedForAdmin ? 'Hide Answer Key' : 'Reveal Answer Key for Admin'}
+                            >
+                              {isRevealedForAdmin ? (
+                                <EyeOff className="w-3.5 h-3.5" />
+                              ) : (
+                                <Eye className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {!isRevealedForAdmin && !currentRound.isAnswerRevealed && (
+                          <button
+                            type="button"
+                            onClick={() => setIsHostAnswerRevealed(true)}
+                            className="flex items-center gap-1 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors"
+                            title="Reveal answer for admin host"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-slate-400" />
+                            <span>Reveal Answer</span>
+                          </button>
+                        )}
+
+                        {!currentRound.isAnswerRevealed ? (
+                          <button
+                            type="button"
+                            onClick={handleRevealAnswer}
+                            className="flex items-center gap-1 text-xs font-bold text-cyan-400 hover:text-cyan-300 bg-cyan-950/60 border border-cyan-800 hover:border-cyan-600 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors"
+                            title="Reveal answer to students"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Reveal to Students</span>
+                          </button>
+                        ) : (
+                          <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-700/60">
+                            Revealed to Students
+                          </span>
+                        )}
                       </div>
                     </div>
-
-                    {!currentRound.isAnswerRevealed ? (
-                      <button
-                        onClick={handleRevealAnswer}
-                        className="flex items-center gap-1 text-xs font-bold text-cyan-400 hover:text-cyan-300 bg-cyan-950/60 border border-cyan-800 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors"
-                        title="Reveal answer to students"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Reveal to Students</span>
-                      </button>
-                    ) : (
-                      <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-700/60">
-                        Revealed to Students
-                      </span>
-                    )}
-                  </div>
-                )}
+                  );
+                })()}
               </div>
 
               {/* CONTESTANT ANSWER EVALUATION WORKFLOW PANEL */}
